@@ -1,0 +1,124 @@
+        :root {
+            --primary-color: #8B4513;
+            --primary-dark: #654321;
+            --primary-light: #D2691E;
+            --gold: #FFD700;
+            --cream: #FFF8DC;
+            --cream-light: #FFFDF5; /* Lighter cream for certificate paper */
+            --text-dark: #333;
+            --text-light: #666;
+        }
+
+        body {
+            font-family: 'Inter', 'Microsoft JhengHei', '微軟正黑體', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, #FAEBD7 70%, var(--cream) 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            color: var(--text-dark);
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(210, 105, 30, 0.03) 0%, transparent 60%); /* Subtle primary-light variant */
+            animation: floatBackground 30s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        /* Animations */
+        @keyframes floatBackground {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.7; }
+            50% { transform: translate(-25px, -15px) rotate(10deg); opacity: 1; }
+        }
+        @keyframes rotateIcon {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+        @keyframes shakeIcon { /* For access denied lock */
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px) rotate(-3deg); }
+            20%, 40%, 60%, 80% { transform: translateX(5px) rotate(3deg); }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(30px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes slideDown {
+             from { opacity: 0; transform: translateY(-20px); } 
+             to { opacity: 1; transform: translateY(0); } 
+        }
+
+
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideUp { animation: slideUp 0.5s ease-out forwards; }
+        .animate-slideDown { animation: slideDown 0.5s ease-out forwards; }
+
+        /* Custom scrollbar for a more modern feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--cream-light);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+        
+        /* Print specific styles */
+        @media print {
+            body {
+                background: white !important; /* Ensure plain white background for printing */
+                font-size: 11pt; /* Adjust base font size for print */
+                color: black;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-container { /* For the certificate itself */
+                 width: 100% !important;
+                 max-width: 100% !important;
+                 margin: 0 !important;
+                 padding: 0 !important; /* Adjust padding for print if needed, or use internal padding */
+                 box-shadow: none !important;
+                 border: 1px solid #666 !important; /* A light border for the cert page */
+            }
+             .print\:break-before-page {
+                page-break-before: always !important;
+            }
+            /* Ensure Tailwind utility classes for print are effective if used inline */
+             .print\:text-sm { font-size: 0.875rem; }
+             .print\:text-xs { font-size: 0.75rem; }
+             /* etc. for other sizes if needed */
+        }
+        .font-tibetan {
+            font-family: 'Noto Sans Tibetan', 'Tibetan Machine Uni', sans-serif; /* Add fallback */
+        }
+        .font-serif-tc {
+            font-family: 'Noto Serif TC', serif;
+        }
+        /* 針對藏文輸入框的特定樣式 */
+.tibetan-input-field {
+  font-family: 'Noto Sans Tibetan', 'Tibetan Machine Uni', sans-serif; /* 再次確保字體 */
+  font-size: 1.125rem !important; /* 或者你期望的字體大小，例如 16px */
+  line-height: 2.1 !important;   /* 關鍵：增加行高，給頂部符號留出空間。可以嘗試 1.8, 2, 2.2 等值 */
+  padding-top: 0.6em !important; /* 關鍵：增加頂部內邊距。0.5em 表示半個字元高度的 padding */
+  padding-bottom: 0.2em !important; /* 底部內邊距，保持平衡 */
+  /* 如果輸入框高度被限制了，可能需要調整 height 或 min-height */
+  /* 例如：min-height: calc(1rem * 2 + 0.5em + 0.25em + 2px); (字體大小 * 行高 + 上下padding + 邊框) */
+}
