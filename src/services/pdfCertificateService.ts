@@ -1,29 +1,38 @@
+// 請在您的檔案頂部引入這兩個函式庫
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
+// 您原有的 triggerHtmlCertificatePrint 函式將被修改為一個分派器
 export async function triggerHtmlCertificatePrint(
-    personData: any,
-    language: 'zh' | 'en',
-    translations: any 
-  ): Promise<void> {
-    console.log("Data received for HTML certificate generation:", JSON.stringify(personData, null, 2));
-    
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0'; 
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    iframe.style.top = '-9999px'; 
-    iframe.style.left = '-9999px';
-    document.body.appendChild(iframe);
+  personData: any,
+  language: 'zh' | 'en',
+  translations: any
+): Promise<void> {
+  console.log("Data for certificate:", personData);
 
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!iframeDoc) {
-      if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe); 
-      }
-      throw new Error('Failed to create iframe document for printing');
-    }
+  // 1. 偵測是否為行動裝置
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // 包含最終版面配置的 HTML 內容
-    const htmlContent = `
+  const htmlContent = generateCertificateHTML(personData); // 將 HTML 生成獨立出來
+
+  if (isMobile) {
+    // 2. 行動裝置：開啟新視窗並提供下載按鈕
+    openCertificateInNewWindow(htmlContent);
+  } else {
+    // 桌面裝置：使用原有的 iframe 列印方式
+    printCertificateViaIframe(htmlContent);
+  }
+}
+
+/**
+ * 輔助函式：生成證書的完整 HTML 內容
+ * @param personData - 皈依者資料
+ * @returns {string} - 證書的 HTML 字串
+ */
+function generateCertificateHTML(personData: any): string {
+    const personDataString = JSON.stringify(personData);
+    // 這裡貼上您之前版本中完整的 HTML 模板字串
+    return `
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -549,11 +558,11 @@ export async function triggerHtmlCertificatePrint(
        <p>2006年起｜大圓印妙法中心  導師 </p>         
        <p>2023年起｜萬佛林密嚴殿 導師 </p> 
        <p>☸️馬來西亞</p> 
-       <p>2000年起｜（泗灣島）邊佳蘭佛教會導師</p>       
+       <p>2000年起｜（泗灣島）邊佳蘭佛教會導師</p> 
+       <p>2018年起｜(柔佛巴魯)蓮花勝王禪修苑  住持</p>       
        <div class="page-number">27</div>
     </div>
     <div class="page teachings-page">
-       <p>2018年起｜(柔佛巴魯)蓮花勝王禪修苑  住持</p> 
        <p>☸️紐西蘭</p> 
        <p>2023年5月｜貝瑪阿諦佛學院  院長</p> 
        <p>☸️泰國清邁</p> 
@@ -680,26 +689,176 @@ export async function triggerHtmlCertificatePrint(
 </body>
 </html>
 `;
-    // 寫入內容並處理列印的程式碼 (維持不變)
+ }
+
+
+/**
+ * 行動版處理：在新視窗中開啟證書並添加操作按鈕
+ * @param {string} htmlContent - 證書的 HTML 內容
+ */
+function openCertificateInNewWindow(htmlContent: string) {
+    const newWindow = window.open("", "_blank");
+    if (!newWindow) {
+        alert("無法開啟新視窗，請檢查您的瀏覽器是否封鎖了彈出視窗。");
+        return;
+    }
+
+    newWindow.document.write(htmlContent);
+
+    // --- 在新視窗中動態添加按鈕和處理邏輯 ---
+
+    // 1. 添加 UI 元素 (按鈕和讀取畫面)
+    const mobileUI = `
+        <style>
+            #mobile-controls {
+                position: fixed; top: 0; left: 0; width: 100%;
+                background: rgba(0,0,0,0.8);
+                padding: 10px;
+                display: flex; justify-content: space-around; align-items: center;
+                z-index: 10000;
+                color: white;
+            }
+            #mobile-controls button {
+                padding: 8px 12px; font-size: 14px; border-radius: 5px; border: 1px solid #fff;
+                background: #4CAF50; color: white;
+            }
+            #loader-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.7);
+                display: none; justify-content: center; align-items: center;
+                z-index: 10001; color: white; font-size: 20px;
+            }
+        </style>
+        <div id="mobile-controls">
+            <button id="btnPrint">列印</button>
+            <button id="btnSavePdf">下載 PDF</button>
+            <button id="btnSaveImg">下載圖片</button>
+        </div>
+        <div id="loader-overlay"><div>處理中，請稍候...</div></div>
+    `;
+    newWindow.document.body.insertAdjacentHTML('beforeend', mobileUI);
+
+    // 2. 獲取新視窗中的元素
+    const printBtn = newWindow.document.getElementById('btnPrint');
+    const savePdfBtn = newWindow.document.getElementById('btnSavePdf');
+    const saveImgBtn = newWindow.document.getElementById('btnSaveImg');
+    const certificateContainer = newWindow.document.getElementById('certificate-container');
+    const loader = newWindow.document.getElementById('loader-overlay');
+
+    const showLoader = () => { if(loader) loader.style.display = 'flex'; };
+    const hideLoader = () => { if(loader) loader.style.display = 'none'; };
+
+    // 3. 綁定按鈕事件
+    if (printBtn) {
+        printBtn.onclick = () => {
+            const controls = newWindow.document.getElementById('mobile-controls');
+            if (controls) controls.style.display = 'none'; // 列印時隱藏按鈕
+            newWindow.print();
+            if (controls) controls.style.display = 'flex'; // 列印後顯示按鈕
+        };
+    }
+
+    if (saveImgBtn) {
+        saveImgBtn.onclick = async () => {
+            if (!certificateContainer) return;
+            showLoader();
+            try {
+                // 使用 html2canvas 將整個證書容器轉為圖片
+                const canvas = await html2canvas(certificateContainer, {
+                    scale: 2, // 提高解析度
+                    useCORS: true,
+                    backgroundColor: '#e0e0e0' // 確保背景色一致
+                });
+                const link = newWindow.document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = '皈依證.png';
+                link.click();
+            } catch (error) {
+                console.error('下載圖片失敗:', error);
+                alert('下載圖片失敗，詳情請見主控台。');
+            } finally {
+                hideLoader();
+            }
+        };
+    }
+
+    if (savePdfBtn) {
+        savePdfBtn.onclick = async () => {
+            if (!certificateContainer) return;
+            showLoader();
+            try {
+                // 建立一個 A5 橫向的 PDF 文件
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a5'
+                });
+
+                const sheets = newWindow.document.querySelectorAll('.a5-sheet');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                for (let i = 0; i < sheets.length; i++) {
+                    const sheet = sheets[i] as HTMLElement;
+                    const canvas = await html2canvas(sheet, { scale: 2, useCORS: true });
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    if (i > 0) {
+                        pdf.addPage(); // 第一頁之後的頁面需要新增頁面
+                    }
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                }
+                pdf.save('皈依證.pdf');
+            } catch (error) {
+                console.error('下載PDF失敗:', error);
+                alert('下載PDF失敗，詳情請見主控台。');
+            } finally {
+                hideLoader();
+            }
+        };
+    }
+    
+    newWindow.document.close();
+}
+
+
+/**
+ * 桌面版處理：使用隱藏的 iframe 進行列印
+ * @param {string} htmlContent - 證書的 HTML 內容
+ */
+function printCertificateViaIframe(htmlContent: string) {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.top = '-9999px';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) {
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+        throw new Error('無法建立 iframe 文件以進行列印');
+    }
+
     iframeDoc.open();
     iframeDoc.write(htmlContent);
     iframeDoc.close();
 
     iframe.onload = () => {
-      console.log("Iframe content fully loaded for printing.");
-      try {
-        iframe.contentWindow?.focus(); 
-        iframe.contentWindow?.print();
-      } catch (printError) {
-        console.error("Error during iframe print:", printError);
-        alert("列印時發生錯誤，請重試或檢查瀏覽器設定。");
-      } finally {
-        setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-            console.log("Iframe removed after printing attempt.");
-          }
-        }, 3000); 
-      }
+        try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+        } catch (printError) {
+            console.error("iframe 列印時發生錯誤:", printError);
+            alert("列印時發生錯誤，請重試或檢查您的瀏覽器設定。");
+        } finally {
+            setTimeout(() => {
+                if (document.body.contains(iframe)) {
+                    document.body.removeChild(iframe);
+                }
+            }, 3000);
+        }
     };
-  }
+}
