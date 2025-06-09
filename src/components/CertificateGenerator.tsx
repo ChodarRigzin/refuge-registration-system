@@ -1,14 +1,13 @@
 // src/components/CertificateGenerator.tsx
 import React, { useState, useContext, useMemo } from 'react';
-import { saveAs } from 'file-saver'; // 用於下載
+// import { saveAs } from 'file-saver'; // 我們不再直接使用 saveAs 在這個組件
 import { AppContext } from '../contexts/AppContext';
 import { Refugee } from '../types';
 import { Button } from './common/Button';
 import { Select } from './common/Select';
-// 不再需要 CertificatePreview 來顯示 HTML 版本的證書
-// import { CertificatePreview } from './CertificatePreview'; 
 import { AccessDenied } from './AccessDenied';
-import { generatePdfCertificate } from '../services/pdfCertificateService'; // 引入我們的服務
+// ***** 關鍵修改：引入正確的函數名 *****
+import { triggerHtmlCertificatePrint } from '../services/pdfCertificateService'; 
 
 interface CertificateGeneratorProps {
   onLoginClick: () => void; 
@@ -17,10 +16,10 @@ interface CertificateGeneratorProps {
 export const CertificateGenerator: React.FC<CertificateGeneratorProps> = ({ onLoginClick }) => {
   const context = useContext(AppContext);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false); // 新增狀態來表示正在生成 PDF
+  const [isPrinting, setIsPrinting] = useState(false);
 
   if (!context) return <div className="p-6 text-center">Loading generator...</div>;
-  const { refugeeData, isAdmin, translations, language } = context; // 需要 language
+  const { refugeeData, isAdmin, translations, language } = context;
 
   if (!isAdmin) {
      return (
@@ -31,42 +30,56 @@ export const CertificateGenerator: React.FC<CertificateGeneratorProps> = ({ onLo
   }
 
   const selectedPerson = useMemo(() => {
-    return refugeeData.find(p => p.id === parseInt(selectedPersonId, 10)) || null;
+    if (!refugeeData || !Array.isArray(refugeeData)) return null;
+    return refugeeData.find(p => p.id.toString() === selectedPersonId) || null;
   }, [refugeeData, selectedPersonId]);
 
-  const handleGenerateAndDownload = async () => {
+  // ***** 關鍵修改：確保這裡調用的是 triggerHtmlCertificatePrint *****
+  const handlePrintCertificate = async () => { // 函數名也最好保持一致
     if (!selectedPerson) {
-      alert(translations.pleaseSelect || '請先選擇一位皈依弟子。');
+      alert(translations?.pleaseSelect || '請先選擇一位皈依弟子。');
       return;
     }
-    setIsGenerating(true);
+    if (!translations || typeof language === 'undefined') {
+      alert('系統資源未完全載入，無法生成證書。請稍後再試。');
+      console.error("Translations object or language is not available in context.");
+      return;
+    }
+
+    setIsPrinting(true);
     try {
-      const pdfBytes = await generatePdfCertificate(selectedPerson, language); // 傳遞選擇的人和語言
-      saveAs(new Blob([pdfBytes], { type: 'application/pdf' }), `${selectedPerson.name}_皈依證.pdf`);
+      await triggerHtmlCertificatePrint(selectedPerson, language, translations);
     } catch (error) {
-      alert(translations.pdfGenerationError || '生成皈依證 PDF 失敗，請查看控制台錯誤。');
-      console.error("PDF Generation failed:", error);
+      alert(translations?.printError || '準備列印皈依證時發生錯誤，請查看控制台。');
+      console.error("Certificate printing failed:", error);
     } finally {
-      setIsGenerating(false);
+      setTimeout(() => {
+        setIsPrinting(false);
+      }, 1500); 
     }
   };
+
+  // 如果你還保留了舊的 handleGenerateAndDownload 函數並且它也引用了 generatePdfCertificate，
+  // 你需要決定是刪除它，還是也將它更新為調用 triggerHtmlCertificatePrint (如果邏輯適用)，
+  // 或者如果它確實是要用舊的 pdf-lib 方式，那你需要確保 pdfCertificateService.ts 中確實有導出 generatePdfCertificate。
+  // 但根據我們最新的方向，應該是統一使用 triggerHtmlCertificatePrint。
 
   return (
     <div className="bg-white/80 backdrop-blur-xl p-6 md:p-10 rounded-xl shadow-xl animate-fadeIn">
       <h2 className="text-2xl md:text-3xl font-semibold text-[var(--primary-color)] mb-8 relative pl-10">
         <span className="absolute left-0 top-0.5 text-[var(--gold)] text-3xl md:text-4xl" style={{animation: 'pulseIcon 2s ease-in-out infinite'}}>◈</span>
-        {translations.certificateGenTitle || '皈依證生成 (PDF)'}
+        {translations?.certificateGenTitleHtmlPrint || '皈依證預覽與列印'}
       </h2>
 
       <div className="max-w-lg mx-auto mb-8">
         <Select
-            label={translations.selectDisciple || '選擇皈依弟子'}
-            id="selectPersonCertPdf" // 修改 id 避免衝突
+            label={translations?.selectDisciple || '選擇皈依弟子'}
+            id="selectPersonToPrintCert"
             value={selectedPersonId}
             onChange={(e) => setSelectedPersonId(e.target.value)}
         >
-            <option value="">{translations.pleaseSelect || '-- 請選擇 --'}</option>
-            {refugeeData && refugeeData.sort((a,b) => b.id - a.id).map(person => (
+            <option value="">{translations?.pleaseSelect || '-- 請選擇 --'}</option>
+            {refugeeData && Array.isArray(refugeeData) && refugeeData.sort((a,b) => b.id - a.id).map(person => (
             <option key={person.id} value={person.id.toString()}>
                 {person.id} - {person.name} ({person.phone})
             </option>
@@ -74,26 +87,28 @@ export const CertificateGenerator: React.FC<CertificateGeneratorProps> = ({ onLo
         </Select>
       </div>
 
-      {selectedPersonId && ( // 只要選擇了人，就顯示按鈕
+      {selectedPersonId && selectedPerson && (
         <div className="mt-10 flex flex-wrap gap-4 justify-center">
           <Button 
-            onClick={handleGenerateAndDownload} 
+            onClick={handlePrintCertificate} // ***** 確保這裡調用的是正確的函數 *****
             variant="primary" 
             size="lg" 
-            icon={<i className="fas fa-file-pdf mr-2"></i>}
-            disabled={isGenerating} // 生成時禁用按鈕
+            icon={<i className="fas fa-print mr-2"></i>}
+            disabled={isPrinting} 
           >
-            {isGenerating ? (translations.generatingPdf || '正在生成 PDF...') : (translations.generateAndDownloadPdf || '生成並下載 PDF')}
+            {isPrinting 
+              ? (translations?.preparingPrint || '正在準備列印...') 
+              : (translations?.printFullCertificate || '列印完整皈依證')}
           </Button>
         </div>
       )}
       {!selectedPersonId && (
          <div className="mt-8 text-center text-gray-500">
-          <p>{translations.selectToGeneratePdf || '請選擇一位皈依弟子以生成 PDF 證書。'}</p>
+          <p>{translations?.selectToPrintCertificate || '請選擇一位皈依弟子以準備列印皈依證。'}</p>
         </div>
       )}
     </div>
   );
 };
 
-// export default CertificateGenerator; // 或 export const CertificateGenerator
+export default CertificateGenerator;
