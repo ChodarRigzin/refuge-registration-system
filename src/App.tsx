@@ -46,13 +46,13 @@ const ErrorFallback: React.FC<{ error?: Error; resetError?: () => void }> = ({ e
   </div>
 );
 
-// ===== 修改點 1：修改 StyledHeader 的定義 =====
+// ===== 修改後的 StyledHeader =====
 const StyledHeader: React.FC<{ 
   translations: Translations;
   onMenuToggle: () => void;
   isMobile: boolean;
-  onLoginClick: () => void; // 新增這一行，告訴它會收到一個叫做 onLoginClick 的函式
-}> = ({ translations, onMenuToggle, isMobile, onLoginClick }) => { // 也要在這裡接收 onLoginClick
+  onLoginClick: () => void;
+}> = ({ translations, onMenuToggle, isMobile, onLoginClick }) => {
   const context = useContext(AppContext);
 
   return (
@@ -69,17 +69,21 @@ const StyledHeader: React.FC<{
         <div className="w-[30px] h-[30px] rounded-md bg-gradient-to-br from-[#8B6F47] to-[#B08D57] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
           R
         </div>
-        <div className="flex flex-col">
-          <h1 className="font-semibold text-base md:text-lg text-[#685335] leading-tight">
+        
+        {/* ***** 主要修改點在這裡 ***** */}
+        <div className="flex flex-col min-w-0"> {/* <--- 加上 min-w-0 允許這個區塊被壓縮 */}
+          <h1 className="font-semibold text-base md:text-lg text-[#685335] leading-tight truncate"> {/* <--- 加上 truncate 做最後的保險 */}
             {translations.systemTitle || '皈依弟子註冊系統'}
           </h1>
-          <p className="text-xs text-gray-500 leading-tight">
+          <p className="text-xs text-gray-500 leading-tight truncate"> {/* <--- 副標題也加上 truncate */}
             Refuge Registration System
           </p>
         </div>
+        {/* ***** 修改結束 ***** */}
+
       </div>
 
-      {/* ===== 右邊區塊 ===== */}
+      {/* ===== 右邊區塊 (維持不變) ===== */}
       <div className="flex items-center gap-4 flex-shrink-0">
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
@@ -88,7 +92,6 @@ const StyledHeader: React.FC<{
         {context && (
           <>
             {context.isAdmin ? (
-              // 如果是管理員，顯示管理員資訊和登出按鈕
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-[#8B6F47] flex items-center justify-center">
@@ -111,9 +114,8 @@ const StyledHeader: React.FC<{
                 </button>
               </div>
             ) : (
-              // 如果不是管理員，顯示登入按鈕
               <button
-                onClick={onLoginClick} // 使用從 AppContent 傳進來的 onLoginClick 函式
+                onClick={onLoginClick}
                 className="px-3 py-1.5 text-sm font-semibold text-white bg-[#8B6F47] rounded-full hover:bg-[#7A5F3C] transition-colors"
               >
                 {translations.adminLogin || '管理員登入'}
@@ -125,7 +127,6 @@ const StyledHeader: React.FC<{
     </header>
   );
 };
-
 // Sidebar 組件 (不變)
 const SidebarNav: React.FC<{
   activeTab: TabKey;
