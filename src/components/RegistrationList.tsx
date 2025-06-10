@@ -1,4 +1,4 @@
-
+// RegistrationList.tsx - 優化版本
 import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../contexts/AppContext';
 import { Refugee } from '../types';
@@ -21,7 +21,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const [editFormData, setEditFormData] = useState<Partial<Refugee>>({});
   const [successMessage, setSuccessMessage] = useState('');
   const [suggestionMessage, setSuggestionMessage] = useState('');
-
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (editingPerson) {
@@ -34,9 +36,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
         email: editingPerson.email || '',
         refugeDate: editingPerson.refugeDate,
         refugePlace: editingPerson.refugePlace,
-        dharmaName: editingPerson.dharmaName || '', // Tibetan Script
-        dharmaNamePhonetic: editingPerson.dharmaNamePhonetic || '', // Chinese Phonetic Transcription
-        dharmaNameMeaning: editingPerson.dharmaNameMeaning || '', // Chinese Meaning
+        dharmaName: editingPerson.dharmaName || '',
+        dharmaNamePhonetic: editingPerson.dharmaNamePhonetic || '',
+        dharmaNameMeaning: editingPerson.dharmaNameMeaning || '',
       });
     }
     setSuggestionMessage(''); 
@@ -46,38 +48,75 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const { refugeeData, deleteRefugee, updateRefugee, isAdmin, translations, language } = context;
 
   if (!isAdmin) {
-    return (
-      <div className="bg-white/80 backdrop-blur-xl p-6 md:p-10 rounded-xl shadow-xl animate-fadeIn">
-        <AccessDenied messageKey="adminOnlyList" onLoginClick={onLoginClick} />
-      </div>
-    );
+    return <AccessDenied messageKey="adminOnlyList" onLoginClick={onLoginClick} />;
   }
 
   const filteredData = useMemo(() => {
     return refugeeData.filter(person =>
       person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       person.phone.includes(searchTerm) ||
-      person.address.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a,b) => b.id - a.id); // Sort by newest first
+      person.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.dharmaNamePhonetic?.toLowerCase().includes(searchTerm.toLowerCase())
+    ).sort((a, b) => b.id - a.id);
   }, [refugeeData, searchTerm]);
 
-  const handleViewPerson = (person: Refugee) => {
-    const genderDisplay = language === 'en' ? (person.gender === '男' ? 'Male' : 'Female') : person.gender;
-    const dharmaDetails = `
-${translations.dharmaName}：${person.dharmaName || '-'} (${translations.dharmaNamePhonetic}：${person.dharmaNamePhonetic || '-'})
-${translations.dharmaNameMeaning}：${person.dharmaNameMeaning || '-'}`;
+  // 分頁計算
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-    alert(`
-${translations.name}：${person.name}
-${translations.gender}：${genderDisplay}
-${translations.nationality}：${person.nationality}
-${translations.phone}：${person.phone}
-${translations.address}：${person.address}
-${translations.email}：${person.email || '-'}
-${translations.refugeDate}：${person.refugeDate}
-${translations.refugePlace}：${person.refugePlace}
-${person.dharmaName || person.dharmaNamePhonetic ? dharmaDetails : ''}
-    `.trim());
+  const handleDeleteClick = (id: number) => {
+    setDeleteConfirmId(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteConfirmId !== null) {
+      deleteRefugee(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const handleViewPerson = (person: Refugee) => {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50';
+    
+    const content = `
+      <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">${translations.viewDetails || '詳細資料'}</h3>
+        <div class="space-y-3 text-sm">
+          <div><span class="font-medium text-gray-600">${translations.name}：</span>${person.name}</div>
+          <div><span class="font-medium text-gray-600">${translations.gender}：</span>${language === 'en' ? (person.gender === '男' ? 'Male' : 'Female') : person.gender}</div>
+          <div><span class="font-medium text-gray-600">${translations.nationality}：</span>${person.nationality}</div>
+          <div><span class="font-medium text-gray-600">${translations.phone}：</span>${person.phone}</div>
+          <div><span class="font-medium text-gray-600">${translations.address}：</span>${person.address}</div>
+          <div><span class="font-medium text-gray-600">${translations.email}：</span>${person.email || '-'}</div>
+          <div><span class="font-medium text-gray-600">${translations.refugeDate}：</span>${person.refugeDate}</div>
+          <div><span class="font-medium text-gray-600">${translations.refugePlace}：</span>${person.refugePlace}</div>
+          ${person.dharmaName ? `
+            <div class="pt-3 border-t border-gray-200">
+              <div><span class="font-medium text-gray-600">${translations.dharmaName}：</span>${person.dharmaName}</div>
+              <div><span class="font-medium text-gray-600">${translations.dharmaNamePhonetic}：</span>${person.dharmaNamePhonetic || '-'}</div>
+              <div><span class="font-medium text-gray-600">${translations.dharmaNameMeaning}：</span>${person.dharmaNameMeaning || '-'}</div>
+            </div>
+          ` : ''}
+        </div>
+        <button class="mt-6 w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+          ${translations.close || '關閉'}
+        </button>
+      </div>
+    `;
+    
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || (e.target as HTMLElement).tagName === 'BUTTON') {
+        document.body.removeChild(modal);
+      }
+    });
   };
 
   const handleOpenEditModal = (person: Refugee) => {
@@ -93,7 +132,9 @@ ${person.dharmaName || person.dharmaNamePhonetic ? dharmaDetails : ''}
   const handleSaveChanges = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingPerson && editFormData) {
-      if (!editFormData.name || !editFormData.gender || !editFormData.nationality || !editFormData.phone || !editFormData.address || !editFormData.refugeDate || !editFormData.refugePlace) {
+      if (!editFormData.name || !editFormData.gender || !editFormData.nationality || 
+          !editFormData.phone || !editFormData.address || !editFormData.refugeDate || 
+          !editFormData.refugePlace) {
         alert(translations.fillAllRequired);
         return;
       }
@@ -108,12 +149,11 @@ ${person.dharmaName || person.dharmaNamePhonetic ? dharmaDetails : ''}
   };
 
   const handleSuggestDharmaName = () => {
-    // Check for uniqueness based on the Chinese Phonetic Transcription
     const usedPhoneticNames = new Set(refugeeData.map(p => p.dharmaNamePhonetic).filter(Boolean));
     let suggestedEntry: DharmaNameEntry | null = null;
 
     for (const entry of dharmaNameList) {
-      if (!usedPhoneticNames.has(entry.phonetic)) { // Check against entry.phonetic (Chinese Transcription)
+      if (!usedPhoneticNames.has(entry.phonetic)) {
         suggestedEntry = entry;
         break;
       }
@@ -122,156 +162,243 @@ ${person.dharmaName || person.dharmaNamePhonetic ? dharmaDetails : ''}
     if (suggestedEntry) {
       setEditFormData(prev => ({
         ...prev,
-        dharmaName: suggestedEntry!.name, // Tibetan Script
-        dharmaNamePhonetic: suggestedEntry!.phonetic, // Chinese Phonetic Transcription
-        dharmaNameMeaning: suggestedEntry!.meaning, // Chinese Meaning
+        dharmaName: suggestedEntry!.name,
+        dharmaNamePhonetic: suggestedEntry!.phonetic,
+        dharmaNameMeaning: suggestedEntry!.meaning,
       }));
       setSuggestionMessage('');
     } else {
       setSuggestionMessage(translations.allDharmaNamesUsed);
     }
   };
-  
-  const tableHeaders = ['id', 'name', 'gender', 'nationality', 'phone', 'address', 'email', 'refugeDate', 'refugePlace', 'dharmaNamePhonetic', 'actions'];
-
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl p-6 md:p-10 rounded-xl shadow-xl animate-fadeIn">
-      <h2 className="text-2xl md:text-3xl font-semibold text-[var(--primary-color)] mb-8 relative pl-10">
-        <span className="absolute left-0 top-0.5 text-[var(--gold)] text-3xl md:text-4xl" style={{ animation: 'pulseIcon 2s ease-in-out infinite' }}>◈</span>
+    <div className="w-full">
+      <h2 className="text-2xl font-bold text-[#8B6F47] mb-6 flex items-center gap-3">
+        <span className="text-2xl text-[#D4A574]">◈</span>
         {translations.discipleList}
+        <span className="text-sm font-normal text-gray-600 ml-auto">
+          共 {filteredData.length} 筆資料
+        </span>
       </h2>
 
-      <div className="mb-6 flex flex-col sm:flex-row gap-3 items-center">
+      {/* 搜尋列 */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <Input
           type="text"
           placeholder={translations.searchPlaceholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-grow w-full sm:w-auto !mb-0"
+          className="flex-grow !mb-0"
           aria-label="Search registrations"
         />
-        <Button onClick={() => setSearchTerm('')} variant="secondary" size="md" className="w-full sm:w-auto">
+        <Button 
+          onClick={() => {
+            setSearchTerm('');
+            setCurrentPage(1);
+          }} 
+          variant="secondary" 
+          size="md"
+        >
           {translations.showAll}
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
-        <table className="w-full min-w-[1200px] border-collapse">
-          <thead className="bg-gradient-to-br from-gray-100 to-gray-200 border-b-2 border-gray-300">
+      {/* 表格 - 響應式設計 */}
+      <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+        <table className="w-full min-w-[800px] border-collapse">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              {tableHeaders.map(key => (
-                <th key={key} className="p-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
-                  {key === 'dharmaNamePhonetic' ? translations.dharmaNamePhonetic : translations[key]}
-                </th>
-              ))}
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.name}</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.gender}</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.phone}</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">{translations.email}</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.refugeDate}</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.dharmaNamePhonetic}</th>
+              <th className="p-3 text-center text-xs font-semibold text-gray-600 uppercase">{translations.actions}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
-            {filteredData.map(person => (
-              <tr key={person.id} className="hover:bg-[var(--cream)]/50 transition-colors duration-150">
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{person.id}</td>
-                <td className="p-3 text-sm text-gray-800 font-medium whitespace-nowrap">{person.name}</td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                  {language === 'en' ? (person.gender === '男' ? 'Male' : 'Female') : person.gender}
+            {paginatedData.map(person => (
+              <tr key={person.id} className="hover:bg-gray-50 transition-colors">
+                <td className="p-3 text-sm text-gray-700">{person.id}</td>
+                <td className="p-3 text-sm text-gray-800 font-medium">{person.name}</td>
+                <td className="p-3 text-sm text-gray-700">
+                  {language === 'en' ? (person.gender === '男' ? 'M' : 'F') : person.gender}
                 </td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{person.nationality}</td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{person.phone}</td>
-                <td className="p-3 text-sm text-gray-700 min-w-[200px] max-w-[300px] whitespace-normal break-words">{person.address}</td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{person.email || '-'}</td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{person.refugeDate}</td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{person.refugePlace}</td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">{person.dharmaNamePhonetic || '-'}</td>
-                <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleViewPerson(person)} variant="neutral" size="sm">
-                      {translations.view}
+                <td className="p-3 text-sm text-gray-700">{person.phone}</td>
+                <td className="p-3 text-sm text-gray-700 hidden md:table-cell">{person.email || '-'}</td>
+                <td className="p-3 text-sm text-gray-700">{person.refugeDate}</td>
+                <td className="p-3 text-sm text-gray-700">{person.dharmaNamePhonetic || '-'}</td>
+                <td className="p-3 text-sm">
+                  <div className="flex gap-1 justify-center">
+                    <Button onClick={() => handleViewPerson(person)} variant="neutral" size="sm" 
+                      className="!px-2 !py-1">
+                      ⬉
                     </Button>
-                    <Button onClick={() => handleOpenEditModal(person)} variant="primary" size="sm">
-                      {translations.edit}
+                    <Button onClick={() => handleOpenEditModal(person)} variant="primary" size="sm"
+                      className="!px-2 !py-1">
+                      ✎
                     </Button>
-                    <Button onClick={() => deleteRefugee(person.id)} variant="danger" size="sm">
-                      {translations.delete}
+                    <Button onClick={() => handleDeleteClick(person.id)} variant="danger" size="sm"
+                      className="!px-2 !py-1">
+                      ⨯
                     </Button>
                   </div>
                 </td>
               </tr>
             ))}
-            {filteredData.length === 0 && (
+            {paginatedData.length === 0 && (
               <tr>
-                <td colSpan={tableHeaders.length} className="p-6 text-center text-gray-500">No records found.</td>
+                <td colSpan={8} className="p-6 text-center text-gray-500">
+                  {searchTerm ? '找不到符合的資料' : '尚無資料'}
+                </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
+      {/* 分頁控制 */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex justify-center gap-2">
+          <Button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            variant="secondary"
+            size="sm"
+          >
+            上一頁
+          </Button>
+          <span className="px-4 py-2 text-sm text-gray-600">
+            第 {currentPage} / {totalPages} 頁
+          </span>
+          <Button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            variant="secondary"
+            size="sm"
+          >
+            下一頁
+          </Button>
+        </div>
+      )}
+
+      {/* 刪除確認 */}
+      {deleteConfirmId !== null && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold mb-4">確認刪除</h3>
+            <p className="text-gray-600 mb-6">確定要刪除這筆資料嗎？此操作無法復原。</p>
+            <div className="flex gap-3">
+              <Button onClick={handleConfirmDelete} variant="danger" className="flex-1">
+                確認刪除
+              </Button>
+              <Button onClick={() => setDeleteConfirmId(null)} variant="secondary" className="flex-1">
+                取消
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 編輯 Modal */}
       {editingPerson && (
-        <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title={`${translations.edit}: ${editingPerson.name}`} size="lg">
+        <Modal 
+          isOpen={isEditModalOpen} 
+          onClose={() => setIsEditModalOpen(false)} 
+          title={`${translations.edit}: ${editingPerson.name}`} 
+          size="xl"
+        >
           {successMessage && (
-             <div className="mb-4 p-3 rounded-lg bg-green-100 border border-green-300 text-green-700 text-sm text-center animate-fadeIn">
-               {successMessage}
-             </div>
+            <div className="mb-4 p-3 rounded-lg bg-green-100 border border-green-300 text-green-700 text-sm text-center">
+              {successMessage}
+            </div>
           )}
-          <form onSubmit={handleSaveChanges} className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-x-4">
-              <Input label={translations.name} name="name" value={editFormData.name || ''} onChange={handleEditFormChange} isRequired />
-              <Select label={translations.gender} name="gender" value={editFormData.gender || ''} onChange={handleEditFormChange} isRequired>
+          
+          <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <Input label={translations.name} name="name" value={editFormData.name || ''} 
+                onChange={handleEditFormChange} isRequired />
+              <Select label={translations.gender} name="gender" value={editFormData.gender || ''} 
+                onChange={handleEditFormChange} isRequired>
                 <option value="">{translations.selectGender}</option>
                 <option value="男">{translations.male}</option>
                 <option value="女">{translations.female}</option>
               </Select>
             </div>
-            <div className="grid md:grid-cols-2 gap-x-4">
-              <Input label={translations.nationality} name="nationality" value={editFormData.nationality || ''} onChange={handleEditFormChange} isRequired />
-              <Input label={translations.phone} name="phone" type="tel" value={editFormData.phone || ''} onChange={handleEditFormChange} isRequired />
-            </div>
-            <Input label={translations.address} name="address" value={editFormData.address || ''} onChange={handleEditFormChange} isRequired />
-            <Input label={translations.email} name="email" type="email" value={editFormData.email || ''} onChange={handleEditFormChange} />
-            <div className="grid md:grid-cols-2 gap-x-4">
-              <Input label={translations.refugeDate} name="refugeDate" type="date" value={editFormData.refugeDate || ''} onChange={handleEditFormChange} isRequired />
-              <Input label={translations.refugePlace} name="refugePlace" value={editFormData.refugePlace || ''} onChange={handleEditFormChange} isRequired />
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <Input label={translations.nationality} name="nationality" 
+                value={editFormData.nationality || ''} onChange={handleEditFormChange} isRequired />
+              <Input label={translations.phone} name="phone" type="tel" 
+                value={editFormData.phone || ''} onChange={handleEditFormChange} isRequired />
             </div>
             
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-md font-semibold text-[var(--primary-dark)]">{translations.dharmaNameOptional}</h4>
+            <Input label={translations.address} name="address" value={editFormData.address || ''} 
+              onChange={handleEditFormChange} isRequired />
+            <Input label={translations.email} name="email" type="email" 
+              value={editFormData.email || ''} onChange={handleEditFormChange} />
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <Input label={translations.refugeDate} name="refugeDate" type="date" 
+                value={editFormData.refugeDate || ''} onChange={handleEditFormChange} isRequired />
+              <Input label={translations.refugePlace} name="refugePlace" 
+                value={editFormData.refugePlace || ''} onChange={handleEditFormChange} isRequired />
+            </div>
+            
+            {/* 法名區塊 */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-lg font-semibold text-[#8B6F47]">
+                  {translations.dharmaNameOptional}
+                </h4>
                 <Button type="button" variant="link" onClick={handleSuggestDharmaName} size="sm">
                   {translations.suggestDharmaName}
                 </Button>
               </div>
-              {suggestionMessage && <p className="text-xs text-red-600 mb-2 animate-shakeIcon">{suggestionMessage}</p>}
+              
+              {suggestionMessage && (
+                <p className="text-sm text-red-600 mb-3">{suggestionMessage}</p>
+              )}
+              
               <div className="space-y-3"> 
-                  <Input 
-                    label={translations.dharmaName} // Should be "法名 (藏文原文)"
-                    name="dharmaName" 
-                    value={editFormData.dharmaName || ''} 
-                    onChange={handleEditFormChange} 
-                    placeholder={translations.dharmaNamePlaceholder} // Should be "請輸入法名 (藏文原文)"
-                    className="font-tibetan text-lg tibetan-input-field" // Apply Tibetan font and slightly larger for script
-                  />
-                  <Input 
-                    label={translations.dharmaNamePhonetic} // Should be "法名音譯 (中文)"
-                    name="dharmaNamePhonetic" 
-                    value={editFormData.dharmaNamePhonetic || ''} 
-                    onChange={handleEditFormChange} 
-                    placeholder={translations.dharmaNamePhoneticPlaceholder} // Should be "請輸入法名音譯 (中文)"
-                  />
-                  <Input 
-                    label={translations.dharmaNameMeaning} // "法名譯意"
-                    name="dharmaNameMeaning" 
-                    value={editFormData.dharmaNameMeaning || ''} 
-                    onChange={handleEditFormChange} 
-                    placeholder={translations.dharmaNameMeaningPlaceholder} // "請輸入法名譯意"
-                  />
+                <Input 
+                  label={translations.dharmaName}
+                  name="dharmaName" 
+                  value={editFormData.dharmaName || ''} 
+                  onChange={handleEditFormChange} 
+                  placeholder={translations.dharmaNamePlaceholder}
+                  size="large"
+                  className="font-tibetan text-lg leading-relaxed"
+                />
+                <Input 
+                  label={translations.dharmaNamePhonetic}
+                  name="dharmaNamePhonetic" 
+                  value={editFormData.dharmaNamePhonetic || ''} 
+                  onChange={handleEditFormChange} 
+                  placeholder={translations.dharmaNamePhoneticPlaceholder}
+                />
+                <Input 
+                  label={translations.dharmaNameMeaning}
+                  name="dharmaNameMeaning" 
+                  value={editFormData.dharmaNameMeaning || ''} 
+                  onChange={handleEditFormChange} 
+                  placeholder={translations.dharmaNameMeaningPlaceholder}
+                />
               </div>
             </div>
 
-            <div className="mt-6 flex gap-3 pt-2">
-              <Button type="submit" variant="primary" size="lg">{translations.saveChanges}</Button>
-              <Button type="button" variant="secondary" size="lg" onClick={() => setIsEditModalOpen(false)}>{translations.cancel}</Button>
+            <div className="mt-6 flex gap-3 pt-4 border-t">
+              <Button onClick={handleSaveChanges} variant="primary" size="lg">
+                {translations.saveChanges}
+              </Button>
+              <Button onClick={() => setIsEditModalOpen(false)} variant="secondary" size="lg">
+                {translations.cancel}
+              </Button>
             </div>
-          </form>
+          </div>
         </Modal>
       )}
     </div>

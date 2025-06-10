@@ -720,7 +720,7 @@ function openCertificateInNewWindow(htmlContent: string) {
             }
             #mobile-controls button {
                 padding: 8px 12px; font-size: 14px; border-radius: 5px; border: 1px solid #fff;
-                background: #4CAF50; color: white;
+                background:rgb(140, 21, 21); color: white;
             }
             #loader-overlay {
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;

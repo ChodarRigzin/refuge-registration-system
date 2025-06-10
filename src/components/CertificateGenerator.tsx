@@ -66,10 +66,10 @@ export const CertificateGenerator: React.FC<CertificateGeneratorProps> = ({ onLo
 
   return (
     <div className="bg-white/80 backdrop-blur-xl p-6 md:p-10 rounded-xl shadow-xl animate-fadeIn">
-      <h2 className="text-2xl md:text-3xl font-semibold text-[var(--primary-color)] mb-8 relative pl-10">
-        <span className="absolute left-0 top-0.5 text-[var(--gold)] text-3xl md:text-4xl" style={{animation: 'pulseIcon 2s ease-in-out infinite'}}>◈</span>
-        {translations?.certificateGenTitleHtmlPrint || '皈依證預覽與列印'}
-      </h2>
+     <h2 className="text-2xl font-bold text-[#8B6F47] mb-8 flex items-center gap-3">
+     <span className="text-2xl text-[#D4A574]">◈</span>
+     {translations?.certificateGenTitleHtmlPrint || '皈依證預覽與列印'}
+</h2>
 
       <div className="max-w-lg mx-auto mb-8">
         <Select

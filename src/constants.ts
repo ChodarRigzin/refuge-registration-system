@@ -171,7 +171,7 @@ export const initialTranslations: AllTranslations = {
     certFounderLabel: "The Teacher｜",
     certFounderName: "Peerless Lord of Sages, King of the Shakyas.",
     certTeacherLabel: "Bestower of the Refuge Vows｜",
-    certTeacherName: "h.e. Kathog Rigzin Chenpo, Pema Wangchen",
+    certTeacherName: "H.E. Kathog Rigzin Chenpo, Pema Wangchen",
     certRefugeeLabel: "Refuge Preceptor｜",
     certDateLabel: "Date of Refuge｜",
     certPlaceLabel: "Place of Refuge｜",

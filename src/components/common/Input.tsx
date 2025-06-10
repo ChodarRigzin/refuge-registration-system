@@ -1,13 +1,26 @@
-
+// 完整的 Input.tsx 修改版
 import React from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   isRequired?: boolean;
+  size?: 'normal' | 'large'; // 新增 size 屬性
 }
 
-export const Input: React.FC<InputProps> = ({ label, id, error, isRequired, className, ...props }) => {
+export const Input: React.FC<InputProps> = ({ 
+  label, 
+  id, 
+  error, 
+  isRequired, 
+  className, 
+  size = 'normal', // 接收 size prop，預設值為 'normal'
+  ...props 
+}) => {
+
+  // 根據 size 決定垂直 padding
+  const paddingClass = size === 'large' ? 'py-3' : 'py-2.5';
+
   return (
     <div className="mb-5">
       {label && (
@@ -18,7 +31,8 @@ export const Input: React.FC<InputProps> = ({ label, id, error, isRequired, clas
       )}
       <input
         id={id}
-        className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm transition-all duration-200 ease-in-out 
+        // 將原本的 py-2.5 換成我們動態計算的 paddingClass
+        className={`w-full px-4 ${paddingClass} border border-gray-300 rounded text-sm transition-all duration-200 ease-in-out 
                    focus:outline-none focus:border-[var(--primary-light)] focus:ring-2 focus:ring-[var(--primary-light)]/30 
                    hover:border-gray-400
                    bg-white disabled:bg-gray-100 disabled:cursor-not-allowed
