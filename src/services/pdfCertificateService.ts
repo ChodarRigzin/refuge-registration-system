@@ -1,29 +1,24 @@
 // 請在您的檔案頂部引入這兩個函式庫
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+
+// ***** 提醒：此檔案現在不再需要 jsPDF 和 html2canvas *****
+// 您可以考慮執行 npm uninstall jspdf html2canvas 來清理專案的依賴項目
+// 但保留它們也暫時不影響功能
+// import jsPDF from 'jspdf';
+// import html2canvas from 'html2canvas';
 
 // 您原有的 triggerHtmlCertificatePrint 函式將被修改為一個分派器
 export async function triggerHtmlCertificatePrint(
-  personData: any,
+  personData: Refugee, // 使用更精確的類型
   language: 'zh' | 'en',
   translations: any
 ): Promise<void> {
+  console.log("Preparing certificate for printing for:", personData.name);
   console.log("Data for certificate:", personData);
-
-  // 1. 偵測是否為行動裝置
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
+ // 1. 產生證書的完整 HTML 內容 
   const htmlContent = generateCertificateHTML(personData); // 將 HTML 生成獨立出來
-
-  if (isMobile) {
-    // 2. 行動裝置：開啟新視窗並提供下載按鈕
-    openCertificateInNewWindow(htmlContent);
-  } else {
-    // 桌面裝置：使用原有的 iframe 列印方式
-    printCertificateViaIframe(htmlContent);
-  }
+ // 2. 直接呼叫 iframe 列印函式，此方法對桌面和行動裝置都適用
+  printCertificateViaIframe(htmlContent);
 }
-
 /**
  * 輔助函式：生成證書的完整 HTML 內容
  * @param personData - 皈依者資料
@@ -343,23 +338,23 @@ function generateCertificateHTML(personData: any): string {
  <!-- A5 Sheet 8: 中文戒律 + 中文戒律 -->
   <div class="a5-sheet">
     <div class="page teachings-page">
-      <h3>無比釋迦牟尼佛寶教共同學處 分說三品：</h3> 
+      <h3>無比釋迦牟尼佛寶教共同學處 分說三品</h3> 
       <p>初、皈依學處。二、近住律儀 。三、近事律儀。</p> 
-      <h3>初品 分二：</h3>
+      <h3>初品 分二</h3>
       <p>一、別說三寶各別皈依學處。二、三寶共通學處。</p>          
-      <h3>一、別說皈依不共學處：</h3>
-      <p>此有三，如頌云：「不求餘護、不害有情、不交外道而於三寶各別恭敬也。」此有止、修二門。</p>  
+      <h3>一、別說皈依不共學處</h3>
+      <p>此有三，如頌云：「不求餘護、不害有情、不交外道而於三寶各別恭敬也。」有止、修二門。</p>  
       <p>遮止學處者：既皈依佛法僧三寶，其各別學處依次為：不依世間諸天求護、斷傷害有情心、不與外道住。若違此三，則失三寶皈依故。《涅槃經》云：「若人皈依佛，是名真居士，終不更皈依，其餘諸天神。皈依於正法，離殺害之心。亦皈依僧伽，不共外道住。」如是說。</p>             
       <p>修行學處者：於佛身依處乃至泥塑（如擦擦）殘片、於法依處乃至一字、於僧伽形相乃至黃布片補丁以上，皆應作三寶想而恭敬之。</p>
       <div class="page-number">11</div>
     </div>
     <div class="page teachings-page">
-      <h3>二、共通學處者：</h3>
+      <h3>二、共通學處者</h3>
       <p>「縱遇命難利養不捨三寶，雖有要事不求他法，恆念功德不斷時供，了知勝利自皈令他皈，所往方所禮敬彼佛。此五為共通學處，大德阿底峽如是說。」</p>          
       <p>如此謂縱為性命王位等亦不捨三寶；無論要事如何重大，唯依三寶不求世間他法；恆念功德不斷時供；知其利益自當皈依並令他人皈依；所往方所禮敬彼方佛及佛像，凡五也。</p>
-      <h3>第二品 近住律儀分二：</h3>
-      <p>一、近住時戒正行學處。二、若轉為恆戒則成八戒居士（གོ་མི་དགེ་བསྙེན།）之理。</p>   
-      <h3>一、近住時戒者：</h3>
+      <h3>第二品 近住律儀分二</h3>
+      <p>一、近住時戒正行學處。二、若轉為恆戒則成八戒居士（གོ་མི་དགེ་བསྙེན།）之理趣。</p>   
+      <h3>一、近住時戒者</h3>
       <p>「斷四根本為戒分四支，離酒為不放逸支，高廣床座、歌舞花鬘、非時食三為苦行支，此八支齋戒也。」</p> 
       <p>此八支非恆常戒，不堪為上品功德所依，故具德相之別解脫唯七眾耳。</p>  
       <p>《俱舍論》云：「戒分不放逸，苦行支次第，四一三如是。」</p> 
@@ -371,12 +366,12 @@ function generateCertificateHTML(personData: any): string {
   <div class="a5-sheet">
     <div class="page teachings-page">
       <p>如此謂斷離邪淫等四根本罪為戒分，離酒為不放逸分，離高廣床座、歌舞花鬘、非時食三為苦行分。此八支限一日夜受持，為時戒非恆戒，不堪為上品戒功德所依，故非別解脫戒。是故堪為上品功德所依之具德相者，決定唯七眾。《道炬論》云：「別解脫律儀，恆具七眾戒，餘則無菩薩，戒律儀緣分。」如是說。</p> 
-      <h3>二、八戒居士者：</h3>       
+      <h3>二、八戒居士者</h3>       
       <p>「若此八支盡形壽受持，名八戒居士，雖非一切有部所說，然為聖者上座部傳承，世親論師如是許。」</p>  
       <p>此謂八戒居士之名，從聖者上座部口訣傳承中聞，未見善逝佛陀親說。然大乘經存有此說，如《寶積經》載：大悲王子盡形壽受八關齋戒故。</p>  
-      <h3>第三品 近事律儀分三：</h3>
+      <h3>第三品 近事律儀分三</h3>
       <p>一、居士五種所斷。二、從守護差別明居士種類。三、示相順學處。</p> 
-      <h3>一、居士五種所斷：</h3>
+      <h3>一、居士五種所斷</h3>
       <p>「殺盜邪淫妄，及斷諸醉品，是為居士戒。」</p>        
 
       <div class="page-number">13</div>
@@ -385,7 +380,7 @@ function generateCertificateHTML(personData: any): string {
         <p>此故居士所斷有根本與分支二者，根本有四：殺生、不與取、邪淫、妄語，此須對境為人，若非如此，僅違犯根本戒相攝之罪，非根本罪主體，故不失毀。</p>        
         <p>於此學處之基不立非梵行而立邪淫者，以在家易守故。《俱舍》云：「邪淫極可呵，易斷易不作。」如是說。</p>        
         <p>支分者：斷諸醉品。若不斷此，不能護餘學處故。彼論云：「遮罪除醉外，為護餘律儀。」如是說。</p>        
-        <h3>二、居士種類：</h3>
+        <h3>二、居士種類</h3>
         <p>此又分：聲聞部派之規，及餘部他規也。</p>        
         <p>其一：「隨欲受持，依數而有一分行、少分行、多分行、圓滿行，斷一二三五之別。」</p>        
         <p>「皈依後僅守皈依學處者，名三皈居士也，此如向者所說。日下部（ཉི་འོག་པ་）、經部許為雖非居士戒，然為具德相之居士也。說一切有部許無居士戒則非具德居士也。</p>
@@ -402,15 +397,15 @@ function generateCertificateHTML(personData: any): string {
     <p>餘部之說：「圓滿居士上更斷梵行者，名梵行居士也。」此與八戒居士具非在家、出家，此乃智者所許。</p> 
     <p>圓滿居士所斷者之上，復更斷除非梵行者，云梵行居士也，雖以瓔珞莊嚴其身，然行法行，如是等義，乃經部宗所欲宣說。</p>
     <p>此與八戒居士二者，於《示現神變經》中亦有所述，如云：「出家德無量，諸佛所讚嘆，然利有情故，我修王位業，盡形守梵行，亦受八齋戒。」此故二者具非出家在家，離家室欲樂故非在家，未受出家相故亦非出家也。</p>
-    <h3>三、相順學處分二：</h3>
+    <h3>三、相順學處分二</h3>
     <p>一、實際學處。二、教誡在家咒師亦須殷行律藏學處。</p>
     <div class="page-number">15</div>
     </div>
     <div class="page teachings-page">
-    <h3>一、實際學處：</h3>
+    <h3>一、實際學處</h3>
     <p>「餘六不善為相順所斷。」</p>
     <p>如此謂總的十不善中，不殺等身三業及語業之妄語為根本故，若違犯此四則失戒律，須重受。若殺非人等四及飲酒五罪，於具戒者前懺。餘兩舌等語三業、意三業共六不善業為相順所斷，仍須以追悔防護之心改過也。</p> 
-    <h3>二、教誡在家咒師：：</h3>
+    <h3>二、教誡在家咒師</h3>
     <p>「居士密咒持明者，惟除僧相及羯磨，餘者實修《蘇婆》說。」</p> 
     <p>如此謂若具居士戒者入於密咒實修，除著袈裟、持缽盂等出家相及少數羯磨儀軌，餘者亦須遵循律藏所說而實行，在家咒師若此，出家咒師更不待言。《蘇婆經》云：「勝者我說別解脫，無餘清淨戒律儀，在家咒士除僧相，羯磨餘悉當修學。」如此說故也。</p>
     <p>此乃錄自《如意寶樹穗》。</p>
@@ -442,7 +437,7 @@ function generateCertificateHTML(personData: any): string {
     <p>另依阿底峽尊者所提「五共通學處」：</p>
     <p>(一)縱遇命難，亦不捨皈依戒。</p>
     <p>(二)縱獲各種財惑、利誘，亦不捨皈依戒。</p>
-    <p>(三)於遇任何災難困境，亦不捨皈依戒，並只求三寶加持。是困境如病，三寶事業如藥，善知識如醫生，審慎明觀。</p>
+    <p>(三)於遇任何災難困境，亦不捨皈依戒，並只求三寶加持。視困境如病，三寶事業如藥，善知識如醫生，審慎明觀。</p>
     <p>(四)任何去處，恆頂禮往處之三寶。</p>
     <p>(五)每日恆念三寶及皈依偈。並常勸他人皈依三寶。</p>
     <div class="page-number">18</div>
@@ -480,7 +475,7 @@ function generateCertificateHTML(personData: any): string {
       <p>（自此為噶陀派世系起始，許為第一世）</p> 
       <p>噶陀大持明（仁珍千寶），仁珍貝瑪諾布，1599-1679，法名更桑智美，於噶陀兩位伏藏師敦都及龍薩坐下學習噶陀諸種教法，大德貝瑪羅珠學習諸多顯宗經典，於山上閉關七年修習菩提心，一生中大部份時間行閉關修持。</p>
       <h3>第五世</h3>
-      <p>仁珍才旺諾布（噶陀派世系許為第二世），1698 - 1755，是位著名於世、時號稱為喜馬拉雅山區十三國之偉大國師，弟子眾多，特別是為尊貴遍知第七世達賴喇嘛、怙主大寶法王噶瑪巴、二位尼泊爾王、二位拉達克王和德格王等的上師。</p>  
+      <p>仁珍才旺諾布（噶陀系許第二世），1698 - 1755，是位著名於世、時號稱為喜馬拉雅山區十三國之偉大國師，弟子眾多，特別是為尊貴遍知第七世達賴喇嘛、怙主大寶法王噶瑪巴、二位尼泊爾王、二位拉達克王和德格王等的上師。</p>  
       <div class="page-number">21</div>
     </div>
     <div class="page teachings-page">
@@ -693,146 +688,23 @@ function generateCertificateHTML(personData: any): string {
 
 
 /**
- * 行動版處理：在新視窗中開啟證書並添加操作按鈕
- * @param {string} htmlContent - 證書的 HTML 內容
- */
-function openCertificateInNewWindow(htmlContent: string) {
-    const newWindow = window.open("", "_blank");
-    if (!newWindow) {
-        alert("無法開啟新視窗，請檢查您的瀏覽器是否封鎖了彈出視窗。");
-        return;
-    }
-
-    newWindow.document.write(htmlContent);
-
-    // --- 在新視窗中動態添加按鈕和處理邏輯 ---
-
-    // 1. 添加 UI 元素 (按鈕和讀取畫面)
-    const mobileUI = `
-        <style>
-            #mobile-controls {
-                position: fixed; top: 0; left: 0; width: 100%;
-                background: rgba(0,0,0,0.8);
-                padding: 10px;
-                display: flex; justify-content: space-around; align-items: center;
-                z-index: 10000;
-                color: white;
-            }
-            #mobile-controls button {
-                padding: 8px 12px; font-size: 14px; border-radius: 5px; border: 1px solid #fff;
-                background:rgb(140, 21, 21); color: white;
-            }
-            #loader-overlay {
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.7);
-                display: none; justify-content: center; align-items: center;
-                z-index: 10001; color: white; font-size: 20px;
-            }
-        </style>
-        <div id="mobile-controls">
-            <button id="btnPrint">列印</button>
-            <button id="btnSavePdf">下載 PDF</button>
-            <button id="btnSaveImg">下載圖片</button>
-        </div>
-        <div id="loader-overlay"><div>處理中，請稍候...</div></div>
-    `;
-    newWindow.document.body.insertAdjacentHTML('beforeend', mobileUI);
-
-    // 2. 獲取新視窗中的元素
-    const printBtn = newWindow.document.getElementById('btnPrint');
-    const savePdfBtn = newWindow.document.getElementById('btnSavePdf');
-    const saveImgBtn = newWindow.document.getElementById('btnSaveImg');
-    const certificateContainer = newWindow.document.getElementById('certificate-container');
-    const loader = newWindow.document.getElementById('loader-overlay');
-
-    const showLoader = () => { if(loader) loader.style.display = 'flex'; };
-    const hideLoader = () => { if(loader) loader.style.display = 'none'; };
-
-    // 3. 綁定按鈕事件
-    if (printBtn) {
-        printBtn.onclick = () => {
-            const controls = newWindow.document.getElementById('mobile-controls');
-            if (controls) controls.style.display = 'none'; // 列印時隱藏按鈕
-            newWindow.print();
-            if (controls) controls.style.display = 'flex'; // 列印後顯示按鈕
-        };
-    }
-
-    if (saveImgBtn) {
-        saveImgBtn.onclick = async () => {
-            if (!certificateContainer) return;
-            showLoader();
-            try {
-                // 使用 html2canvas 將整個證書容器轉為圖片
-                const canvas = await html2canvas(certificateContainer, {
-                    scale: 2, // 提高解析度
-                    useCORS: true,
-                    backgroundColor: '#e0e0e0' // 確保背景色一致
-                });
-                const link = newWindow.document.createElement('a');
-                link.href = canvas.toDataURL('image/png');
-                link.download = '皈依證.png';
-                link.click();
-            } catch (error) {
-                console.error('下載圖片失敗:', error);
-                alert('下載圖片失敗，詳情請見主控台。');
-            } finally {
-                hideLoader();
-            }
-        };
-    }
-
-    if (savePdfBtn) {
-        savePdfBtn.onclick = async () => {
-            if (!certificateContainer) return;
-            showLoader();
-            try {
-                // 建立一個 A5 橫向的 PDF 文件
-                const pdf = new jsPDF({
-                    orientation: 'landscape',
-                    unit: 'mm',
-                    format: 'a5'
-                });
-
-                const sheets = newWindow.document.querySelectorAll('.a5-sheet');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-
-                for (let i = 0; i < sheets.length; i++) {
-                    const sheet = sheets[i] as HTMLElement;
-                    const canvas = await html2canvas(sheet, { scale: 2, useCORS: true });
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    if (i > 0) {
-                        pdf.addPage(); // 第一頁之後的頁面需要新增頁面
-                    }
-                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                }
-                pdf.save('皈依證.pdf');
-            } catch (error) {
-                console.error('下載PDF失敗:', error);
-                alert('下載PDF失敗，詳情請見主控台。');
-            } finally {
-                hideLoader();
-            }
-        };
-    }
-    
-    newWindow.document.close();
-}
-
-
-/**
- * 桌面版處理：使用隱藏的 iframe 進行列印
+ * 桌面與行動裝置通用的列印方式：使用隱藏的 iframe 進行列印
  * @param {string} htmlContent - 證書的 HTML 內容
  */
 function printCertificateViaIframe(htmlContent: string) {
+    // 為了防止重複點擊時產生多個 iframe，先檢查並移除舊的
+    const existingIframe = document.getElementById('print-iframe');
+    if (existingIframe) {
+        existingIframe.remove();
+    }
+
     const iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe'; // 給它一個 ID 以便管理
     iframe.style.position = 'absolute';
     iframe.style.width = '0';
     iframe.style.height = '0';
     iframe.style.border = '0';
-    iframe.style.top = '-9999px';
+    iframe.style.top = '-9999px'; // 將 iframe 移出可視區域
     iframe.style.left = '-9999px';
     document.body.appendChild(iframe);
 
@@ -846,6 +718,7 @@ function printCertificateViaIframe(htmlContent: string) {
     iframeDoc.write(htmlContent);
     iframeDoc.close();
 
+    // onload 事件能確保 iframe 內的圖片等資源都載入完成後才觸發列印
     iframe.onload = () => {
         try {
             iframe.contentWindow?.focus();
@@ -854,6 +727,7 @@ function printCertificateViaIframe(htmlContent: string) {
             console.error("iframe 列印時發生錯誤:", printError);
             alert("列印時發生錯誤，請重試或檢查您的瀏覽器設定。");
         } finally {
+            // 列印對話框關閉後，稍微延遲一下再移除 iframe，確保流程完整
             setTimeout(() => {
                 if (document.body.contains(iframe)) {
                     document.body.removeChild(iframe);

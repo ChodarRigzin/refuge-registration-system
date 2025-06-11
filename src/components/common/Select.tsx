@@ -1,40 +1,41 @@
-// Select.tsx
+// src/components/common/Select.tsx - 已修正類型定義的版本
+
 import React, { ReactNode } from 'react';
 
+// 1. 定義 Select 元件需要的 Props
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label: string; // 設為必填
+  label: string;
   id: string;
-  error?: string;
+  children: ReactNode; // 允許傳入 <option>
+  error?: string | null;
   isRequired?: boolean;
-  children: ReactNode;
+  className?: string;
 }
 
-export const Select: React.FC<SelectProps> = ({ label, id, error, isRequired, children, className = '', ...props }) => {
+// 2. 使用現代的函式元件寫法，移除 React.FC
+export const Select = ({
+  label,
+  id,
+  children,
+  error,
+  isRequired = false,
+  className = '',
+  ...props
+}: SelectProps) => {
+  const labelStyle = "block text-sm font-medium text-gray-700 mb-1";
+  const selectBaseStyle = "block w-full px-3 py-2 bg-white border rounded-md shadow-sm sm:text-sm focus:outline-none transition-colors";
+  const errorStyle = "border-red-500 text-red-900 focus:ring-red-500 focus:border-red-500";
+  const normalStyle = "border-gray-300 focus:ring-[#8B6F47] focus:border-[#8B6F47]";
+
   return (
-    // 移除外層的 mb-5
-    <div className="w-full">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1.5">
+    <div className={className}>
+      <label htmlFor={id} className={labelStyle}>
         {label}
         {isRequired && <span className="text-red-500 ml-1">*</span>}
       </label>
-      {/* 
-        調整 padding 和樣式
-        使用 Tailwind 的 ring utilities 簡化 focus 效果
-        更新下拉箭頭 SVG 的顏色以匹配新設計
-      */}
       <select
         id={id}
-        className={`
-          block w-full px-3 py-2 text-base
-          border border-gray-300 rounded-md shadow-sm
-          focus:outline-none focus:ring-1 focus:ring-[#8B6F47] focus:border-[#8B6F47]
-          transition-colors duration-200
-          appearance-none pr-8 bg-no-repeat
-          bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22%236b7280%22%3E%3Cpath%20d%3D%22M8%2011L3%206h10z%22%2F%3E%3C%2Fsvg%3E')]
-          bg-[right_0.5rem_center] bg-[length:1em_1em]
-          ${className}
-          ${error ? 'border-red-500 focus:ring-red-500' : ''}
-        `}
+        className={`${selectBaseStyle} ${error ? errorStyle : normalStyle}`}
         {...props}
       >
         {children}
