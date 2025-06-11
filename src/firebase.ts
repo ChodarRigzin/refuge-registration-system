@@ -1,11 +1,13 @@
-// src/firebase.ts - 已修正逗號與 Vite 環境變數前綴
+// src/firebase.ts - 已加入 Functions 初始化的最終版本
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+// ***** 這是最關鍵的新增部分 *****
+import { getFunctions } from 'firebase/functions';
 
-// Vite 使用 import.meta.env 來讀取環境變數
 const firebaseConfig = {
+  // 您的環境變數讀取方式維持不變
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -15,7 +17,13 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID, 
 };
 
-
 const app = initializeApp(firebaseConfig);
+
+// 初始化並匯出所有我們需要的服務
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+// ***** 這是最關鍵的新增部分 *****
+// 初始化 Firebase Functions，並指定您的 Cloud Function 所在的區域
+// 通常是 'us-central1'，您可以在 Firebase 控制台的 Functions 頁面確認
+export const functions = getFunctions(app, 'us-central1'); 
