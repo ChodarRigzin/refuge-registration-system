@@ -72,20 +72,30 @@ export const CertificateGenerator: React.FC<CertificateGeneratorProps> = ({ onLo
 </h2>
 
       <div className="max-w-lg mx-auto mb-8">
-        <Select
-            label={translations?.selectDisciple || '選擇皈依弟子'}
-            id="selectPersonToPrintCert"
-            value={selectedPersonId}
-            onChange={(e) => setSelectedPersonId(e.target.value)}
-        >
-            <option value="">{translations?.pleaseSelect || '-- 請選擇 --'}</option>
-            {refugeeData && Array.isArray(refugeeData) && refugeeData.sort((a,b) => b.id - a.id).map(person => (
-            <option key={person.id} value={person.id.toString()}>
-                {person.id} - {person.name} ({person.phone})
-            </option>
-            ))}
-        </Select>
-      </div>
+    <Select
+        label={translations?.selectDisciple || '選擇皈依弟子'}
+        id="selectPersonToPrintCert"
+        value={selectedPersonId}
+        onChange={(e) => setSelectedPersonId(e.target.value)}
+    >
+        <option value="">{translations?.pleaseSelect || '-- 請選擇 --'}</option>
+        {refugeeData && Array.isArray(refugeeData) && refugeeData
+            // 1. 先按照註冊時間排序，最新的在最前面 (這部分已正確)
+            .sort((a, b) => {
+                const timeA = a.registrationTime ? new Date(a.registrationTime).getTime() : 0;
+                const timeB = b.registrationTime ? new Date(b.registrationTime).getTime() : 0;
+                return timeB - timeA;
+            })
+            // 2. 映射到選項，並使用第二個參數 index 來產生編號
+            .map((person, index) => ( 
+                // key 和 value 仍然使用 Firebase 的唯一 ID，這是功能正確的關鍵
+                <option key={person.id} value={person.id}>
+                    {/* 這裡進行修改：顯示的文字使用 index + 1 來產生人類可讀的編號 */}
+                    {index + 1}. {person.name} ({person.phone})
+                </option>
+        ))}
+    </Select>
+  </div>
 
       {selectedPersonId && selectedPerson && (
         <div className="mt-10 flex flex-wrap gap-4 justify-center">
