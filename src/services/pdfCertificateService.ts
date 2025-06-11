@@ -416,7 +416,7 @@ function generateCertificateHTML(personData: any): string {
   <!-- A5 Sheet 11: 戒律攝要 + 戒律攝要 -->
   <div class="a5-sheet">
     <div class="page teachings-page">
-    <h3>皈依學處攝要分三：</h3>
+    <h3>皈依學處攝要分三</h3>
     <p>所捨學處、所取學處、通分學處。</p>
     <h3>一、所捨學處</h3>
     <p>(一)皈依佛後，不能皈依世間鬼神。</p>

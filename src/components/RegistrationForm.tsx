@@ -145,8 +145,9 @@ export const RegistrationForm = () => {
       
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
         <div className="space-y-6">
+          {/* 基本資料 */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">基本資料</h3>
+            <h3 className="text-lg ...">{translations.subheadingBasicInfo}</h3>
             <div className="grid md:grid-cols-2 gap-4 md:gap-6">
               <div><Input label={translations.name} id="name" name="name" value={formData.name} onChange={handleChange} onBlur={() => handleBlur('name')} placeholder={translations.namePlaceholder || '請輸入您的姓名'} isRequired error={getFieldError('name')} disabled={isSubmitting}/></div>
               <div>
@@ -158,8 +159,9 @@ export const RegistrationForm = () => {
               </div>
             </div>
           </div>
+           {/* 聯絡資料 */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">聯絡資料</h3>
+            <h3 className="text-lg ...">{translations.subheadingContactInfo}</h3>
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                 <Input label={translations.nationality} id="nationality" name="nationality" value={formData.nationality} onChange={handleChange} onBlur={() => handleBlur('nationality')} placeholder={translations.nationalityPlaceholder || '請輸入國籍'} isRequired error={getFieldError('nationality')} disabled={isSubmitting}/>
@@ -172,8 +174,9 @@ export const RegistrationForm = () => {
               <Input label={translations.email} id="email" name="email" type="email" value={formData.email} onChange={handleChange} onBlur={() => handleBlur('email')} placeholder={translations.emailPlaceholder || '請輸入電子郵件'} isRequired error={getFieldError('email')} disabled={isSubmitting}/>
             </div>
           </div>
+          {/* 皈依資料 */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">皈依資料</h3>
+            <h3 className="text-lg ...">{translations.subheadingRefugeInfo}</h3>
             <div className="grid md:grid-cols-2 gap-4 md:gap-6">
               <Input label={translations.refugeDate} id="refugeDate" name="refugeDate" type="date" value={formData.refugeDate} onChange={handleChange} onBlur={() => handleBlur('refugeDate')} isRequired error={getFieldError('refugeDate')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]}/>
               <Input label={translations.refugePlace} id="refugePlace" name="refugePlace" value={formData.refugePlace} onChange={handleChange} onBlur={() => handleBlur('refugePlace')} placeholder={translations.refugePlacePlaceholder || '請輸入皈依地點'} isRequired error={getFieldError('refugePlace')} disabled={isSubmitting}/>

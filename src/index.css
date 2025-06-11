@@ -1,3 +1,12 @@
+/* src/index.css */
+
+/* 1. 引入 Tailwind CSS 的三個核心指令 (這是最重要的部分！) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* 2. 在這裡加入您原本的自訂樣式和變數 */
 :root {
     --primary-color: #8B4513;
     --primary-dark: #654321;
