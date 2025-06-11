@@ -1,3 +1,4 @@
+// src/constants.ts - 最終、已清理和重構的版本
 
 import { AllTranslations } from './types';
 
@@ -6,16 +7,20 @@ export const ORGANIZATION_NAME_KEY = "organizationName";
 
 export const initialTranslations: AllTranslations = {
   zh: {
+    // --- 系統 & 導覽 ---
     systemTitle: "皈依登記管理系統",
     organizationName: "噶陀仁珍千寶佛學會",
-    refugeRegistration: "皈依登記",
-    registrationList: "登記名單",
-    certificateGeneration: "皈依證生成",
+    registrationFormTitle: "皈依登記表",
+    discipleList: "皈依名單",
+    certificateGenTitleHtmlPrint: "皈依證預覽與列印", // **新的 Key**
+    
+    // --- 使用者狀態 ---
     guest: "訪客",
     admin: "管理員",
     adminLogin: "管理員登入",
     logout: "登出",
-    registrationFormTitle: "皈依登記表",
+    
+    // --- 通用欄位 & 按鈕 ---
     name: "姓名",
     gender: "性別",
     nationality: "國籍",
@@ -39,63 +44,40 @@ export const initialTranslations: AllTranslations = {
     delete: "刪除",
     saveChanges: "儲存變更",
     cancel: "取消",
-    printCertificate: "列印皈依證",
-    saveAsPDF: "儲存為PDF",
+    login: "登入",
+    id: "ID",
+    actions: "操作",
+
+    // --- 證書頁面 ---
+    selectDisciple: "選擇皈依弟子",
+    pleaseSelect: "請選擇...",
+    printFullCertificate: "列印完整皈依證", // **新的 Key**
+    preparingPrint: "正在準備列印...", // **新的 Key**
+    selectToPrintCertificate: "請選擇一位皈依弟子以準備列印皈依證。", // **新的 Key**
+    printError: "準備列印皈依證時發生錯誤，請查看控制台。", // **新的 Key**
+
+    // --- 訊息 & 提示 ---
     registrationSuccess: "登記成功！感謝您的填寫。",
     updateSuccess: "資料更新成功！",
     fillAllRequired: "請填寫所有必填欄位！",
     confirmDelete: "確定要刪除這筆資料嗎？",
-    discipleList: "皈依弟子名單",
-    id: "編號",
-    actions: "操作",
-    certificateGenTitle: "皈依證生成",
-    selectDisciple: "選擇皈依弟子",
-    pleaseSelect: "請選擇...",
-    certificateTitle: "皈依證書", // Used in old cert, PDF has "皈依證"
-    refugeVowCertificate: "皈依證", // From PDF
-    pdfOrgNameLine1: "噶陀仁珍千寶總會", // From PDF
-    pdfOrgNameLine2: "From the Office of Kathog Rigzin Chenpo", // From PDF
-    pdfVerseHeading: "", // No explicit heading, just verses
-    pdfVerseLine1: "諸惡莫作 眾善奉行",
-    pdfVerseLine2: "自淨其意 是諸佛法",
-    pdfVerseLine1_en: "Shun all evil, Practice all good,",
-    pdfVerseLine2_en: "Purify one's own mind;",
-    pdfVerseLine3_en: "This is the teaching of all Buddhas.",
-    pdfVerseLine1_ti: "༄༅། །སྐྱབས་སྡོམ་ཐོབ་ཡིག །", // Placeholder for Tibetan script
-    
-    // Page 5 of PDF content
-    certFounderLabel: "創教者｜",
-    certFounderName: "無等導師釋迦能仁王",
-    certTeacherLabel: "傳皈依戒師｜",
-    certTeacherName: "噶陀仁珍千寶‧貝瑪旺晴",
-    certRefugeeLabel: "皈依者｜",
-    certDateLabel: "皈依日期｜",
-    certPlaceLabel: "皈依地點｜",
-    certDharmaNameLabel: "法名 (藏文原文)｜",
-    certDharmaNamePhoneticLabel: "法名音譯 (中文)｜",
-    certDharmaNameMeaningLabel: "法名譯意｜",
-    
-    certLine1: "茲證明",
-    certHonorific: "居士",
-    certLine2: "於",
-    certLine3: "在",
-    certLine4: "正式皈依三寶，成為佛門弟子。",
-    certLine5: "願承佛慈悲教誨，精進修行，利益眾生。",
-    refugeTeacher: "皈依師：", 
-    teacherSeal: "師父印",
-    witness: "見證：",
-    templeSeal: "道場印",
-
     accessDenied: "權限不足",
     adminOnlyList: "只有管理員可以查看登記名單",
     adminOnlyCert: "只有管理員可以生成皈依證",
-    username: "帳號",
-    password: "密碼",
-    login: "登入",
-    loginError: "帳號或密碼錯誤！",
+    loginError: "信箱或密碼錯誤！",
+    phoneHint: "請包含國碼，例如台灣 +886，馬來西亞 +60", // **新的 Key**
+    invalidPhoneWithCountryCode: "請輸入包含國碼的完整電話號碼 (例如 +886912345678)", // **新的 Key**
+    invalidPhoneWithCountryCodeShort: "格式錯誤 (應為 +國碼號碼)", // **新的 Key**
+    fieldRequired: "此欄位為必填",
+    invalidEmail: "請輸入有效的電子郵件地址",
+    suggestDharmaName: "建議法名",
+    allDharmaNamesUsed: "所有預設法名已被使用",
+    dharmaNameOptional: "法名相關 (管理員填寫)",
+    
+    // --- 輸入框預設文字 (Placeholder) ---
     namePlaceholder: "請輸入您的姓名",
     nationalityPlaceholder: "請輸入您的國籍",
-    phonePlaceholder: "請輸入您的電話號碼",
+    phonePlaceholder: "+886912345678",
     addressPlaceholder: "請輸入您的地址",
     emailPlaceholder: "請輸入您的電子信箱",
     refugePlacePlaceholder: "請輸入皈依地點",
@@ -103,24 +85,22 @@ export const initialTranslations: AllTranslations = {
     dharmaNamePhoneticPlaceholder: "請輸入法名音譯 (中文)",
     dharmaNameMeaningPlaceholder: "請輸入法名譯意",
     searchPlaceholder: "搜尋姓名、電話或地址...",
-    pdfNotSupported: "PDF儲存功能需要額外的函式庫支援。\n您可以使用瀏覽器的列印功能，選擇「儲存為PDF」。",
-    chinese: "中文",
-    english: "English",
-    suggestDharmaName: "建議法名",
-    allDharmaNamesUsed: "所有預設法名已被使用",
-    dharmaNameOptional: "法名相關 (管理員填寫)",
   },
   en: {
+    // --- System & Navigation ---
     systemTitle: "Refuge Registration System",
-    organizationName: "Kathok Rigzin Chenpo Buddhist Society",
-    refugeRegistration: "Refuge Registration",
-    registrationList: "Registration List",
-    certificateGeneration: "Certificate Generation",
+    organizationName: "Kathog Rigzin Chenpo Dharma Association",
+    registrationFormTitle: "Refuge Registration Form",
+    discipleList: "Refugee List",
+    certificateGenTitleHtmlPrint: "Certificate Preview & Print", // **New Key**
+
+    // --- User Status ---
     guest: "Guest",
     admin: "Administrator",
     adminLogin: "Admin Login",
     logout: "Logout",
-    registrationFormTitle: "Refuge Registration Form",
+
+    // --- Common Fields & Buttons ---
     name: "Name",
     gender: "Gender",
     nationality: "Nationality",
@@ -129,7 +109,7 @@ export const initialTranslations: AllTranslations = {
     email: "Email",
     refugeDate: "Refuge Date",
     refugePlace: "Refuge Place",
-    dharmaName: "Dharma Name (Tibetan Script)",
+    dharmaName: "Dharma Name (Tibetan)",
     dharmaNamePhonetic: "Phonetic Dharma Name (Chinese)",
     dharmaNameMeaning: "Meaning of Dharma Name",
     selectGender: "Please select gender",
@@ -144,73 +124,46 @@ export const initialTranslations: AllTranslations = {
     delete: "Delete",
     saveChanges: "Save Changes",
     cancel: "Cancel",
-    printCertificate: "Print Certificate",
-    saveAsPDF: "Save as PDF",
-    registrationSuccess: "Registration successful! Thank you for your submission.",
+    login: "Login",
+    id: "ID",
+    actions: "Actions",
+
+    // --- Certificate Page ---
+    selectDisciple: "Select Disciple",
+    pleaseSelect: "Please select...",
+    printFullCertificate: "Print Full Certificate", // **New Key**
+    preparingPrint: "Preparing to print...", // **New Key**
+    selectToPrintCertificate: "Please select a disciple to prepare the certificate for printing.", // **New Key**
+    printError: "An error occurred while preparing the certificate for printing. Please check the console.", // **New Key**
+
+    // --- Messages & Hints ---
+    registrationSuccess: "Registration successful! Thank you.",
     updateSuccess: "Data updated successfully!",
     fillAllRequired: "Please fill in all required fields!",
     confirmDelete: "Are you sure you want to delete this record?",
-    discipleList: "Refuge Disciples List",
-    id: "ID",
-    actions: "Actions",
-    certificateGenTitle: "Certificate Generation",
-    selectDisciple: "Select Refuge Disciple",
-    pleaseSelect: "Please select...",
-    certificateTitle: "Refuge Certificate", 
-    refugeVowCertificate: "Refuge Vow Certificate", 
-    pdfOrgNameLine1: "Kathok Rigzin Chenpo General Assembly", 
-    pdfOrgNameLine2: "From the Office of Kathog Rigzin Chenpo", 
-    pdfVerseHeading: "",
-    pdfVerseLine1: "Shun all evil, Practice all good,", 
-    pdfVerseLine2: "Purify one's own mind;",
-    pdfVerseLine3: "This is the teaching of all Buddhas.", 
-    pdfVerseLine1_zh: "諸惡莫作 眾善奉行", 
-    pdfVerseLine2_zh: "自淨其意 是諸佛法",
-    pdfVerseLine1_ti: "༄༅། །སྐྱབས་སྡོམ་ཐོབ་ཡིག །", 
-
-    certFounderLabel: "The Teacher｜",
-    certFounderName: "Peerless Lord of Sages, King of the Shakyas.",
-    certTeacherLabel: "Bestower of the Refuge Vows｜",
-    certTeacherName: "H.E. Kathog Rigzin Chenpo, Pema Wangchen",
-    certRefugeeLabel: "Refuge Preceptor｜",
-    certDateLabel: "Date of Refuge｜",
-    certPlaceLabel: "Place of Refuge｜",
-    certDharmaNameLabel: "Dharma Name (Tibetan Script)｜",
-    certDharmaNamePhoneticLabel: "Phonetic Dharma Name (Chinese)｜",
-    certDharmaNameMeaningLabel: "Meaning of Dharma Name｜",
-
-    certLine1: "This is to certify that",
-    certHonorific: "", 
-    certLine2: "on",
-    certLine3: "at",
-    certLine4: "has formally taken refuge in the Three Jewels and become a Buddhist disciple.",
-    certLine5: "May you follow the Buddha's compassionate teachings, practice diligently, and benefit all beings.",
-    refugeTeacher: "Refuge Teacher:",
-    teacherSeal: "Teacher's Seal",
-    witness: "Witness:",
-    templeSeal: "Temple Seal",
     accessDenied: "Access Denied",
-    adminOnlyList: "Only administrators can view the registration list",
-    adminOnlyCert: "Only administrators can generate certificates",
-    username: "Username",
-    password: "Password",
-    login: "Login",
-    loginError: "Invalid username or password!",
+    adminOnlyList: "Only administrators can view the registration list.",
+    adminOnlyCert: "Only administrators can generate certificates.",
+    loginError: "Invalid email or password!",
+    phoneHint: "Include country code, e.g., +886 for Taiwan, +60 for Malaysia.", // **New Key**
+    invalidPhoneWithCountryCode: "Please enter a complete phone number with country code (e.g., +886912345678).", // **New Key**
+    invalidPhoneWithCountryCodeShort: "Invalid format (e.g., +886...)", // **New Key**
+    fieldRequired: "This field is required",
+    invalidEmail: "Please enter a valid email address",
+    suggestDharmaName: "Suggest Name",
+    allDharmaNamesUsed: "All preset Dharma names have been used!",
+    dharmaNameOptional: "Dharma Name (Admin entry)",
+
+    // --- Placeholders ---
     namePlaceholder: "Please enter your name",
     nationalityPlaceholder: "Please enter your nationality",
-    phonePlaceholder: "Please enter your phone number",
+    phonePlaceholder: "+886912345678",
     addressPlaceholder: "Please enter your address",
     emailPlaceholder: "Please enter your email",
     refugePlacePlaceholder: "Please enter the refuge place",
-    dharmaNamePlaceholder: "Enter Dharma Name (Tibetan Script)",
+    dharmaNamePlaceholder: "Enter Dharma Name (Tibetan)",
     dharmaNamePhoneticPlaceholder: "Enter Phonetic Dharma Name (Chinese)",
     dharmaNameMeaningPlaceholder: "Enter Meaning of Dharma Name",
-    searchPlaceholder: "Search by name, phone or address...",
-    pdfNotSupported: "PDF save function requires additional libraries.\nYou can use the browser's print function and select 'Save as PDF'.",
-    chinese: "中文",
-    english: "English",
-    suggestDharmaName: "建議法名",
-    allDharmaNamesUsed: "All preset Dharma names have been used",
-    dharmaNameOptional: "Dharma Name Details (Admin entry)",
+    searchPlaceholder: "Search by name, phone, or address...",
   },
 };
