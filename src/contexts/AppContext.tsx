@@ -132,9 +132,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     deleteRefugee,
   };
   
-  // ******** 臨時暴露 functions 實例，以便從 Console 呼叫 ********
-  // ******** 成功設定完管理員後，請務必刪除這一行並重新部署！ ********
-  (window as any).app_functions = functions;
 
   return (
     <AppContext.Provider value={value}>

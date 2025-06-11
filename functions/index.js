@@ -51,15 +51,14 @@ exports.registerUser = functions.https.onCall(async (data, context) => {
 // 函式二：設定管理員權限 (我們新增的函式)
 // ======================================================================
 exports.setAdminRole = functions.https.onCall(async (data, context) => {
-  //
-  // ******** 第一次設定時，請務必將以下這段檢查註解掉！ ********
-  //
-  // if (context.auth.token.admin !== true) {
-  //   return { error: "權限不足：只有管理員才能設定其他管理員。" };
-  // }
-  //
-  // **********************************************************
-  //
+  
+
+  
+  if (context.auth.token.admin !== true) {
+     return { error: "權限不足：只有管理員才能設定其他管理員。" };
+   }
+  
+ 
 
   // 從前端接收要設為管理員的 email
   const email = data.email;
