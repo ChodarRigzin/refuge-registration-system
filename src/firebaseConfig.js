@@ -8,15 +8,17 @@ import { getFunctions } from "firebase/functions";
 import { getAnalytics } from "firebase/analytics";
 
 // 您的 Web 應用程式的 Firebase 設定
-// 重要：請直接從您的 Firebase 專案設定中複製，確保金鑰是正確的
+// --- 關鍵修改：將寫死的金鑰換成 process.env.REACT_APP_... ---
 const firebaseConfig = {
-  apiKey: "AIzaSyC4kCI-NGjJaXPZC9R8jfrlsDyDsfECypU", // 請使用您自己的金鑰
-  authDomain: "refuge-registration-system.firebaseapp.com",
-  projectId: "refuge-registration-system",
-  storageBucket: "refuge-registration-system.appspot.com",
-  messagingSenderId: "73516237447",
-  appId: "1:73516237447:web:b9b0af4af80c151519ee22",
-  measurementId: "G-FQ0CDF436R" // <--- 在您提供的程式碼中，這裡前面少了一個逗號，已補上
+  // 語法是 process.env.金鑰名稱
+  // REACT_APP_ 是 React 專案的標準前綴
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
 // 初始化 Firebase 應用程式
