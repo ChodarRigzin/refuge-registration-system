@@ -128,32 +128,24 @@ const StyledHeader: React.FC<{
   );
 };
 
-// Sidebar 組件 (不變)
-const SidebarNav: React.FC<{
-  activeTab: TabKey;
-  onTabChange: (tab: TabKey) => void;
-  isAdmin: boolean;
-  translations: Translations;
-  isOpen: boolean;
-  onClose: () => void;
-  isMobile: boolean;
-}> = ({ activeTab, onTabChange, isAdmin, translations, isOpen, onClose, isMobile }) => {
-  const navItems = [
+// Sidebar 組件 
+  // 我們讓每個項目的 label 只對應一個唯一的翻譯 key
+const navItems = [
     { 
       key: TabKey.Registration, 
-      label: translations.registrationTitle || translations.registrationFormTitle || '註冊表單',
+      label: translations.registrationFormTitle, // 直接使用 registrationFormTitle
       adminOnly: false,
       icon: '✎'
     },
     { 
       key: TabKey.List, 
-      label: translations.listTitle || translations.discipleList || '皈依弟子名單',
+      label: translations.discipleList, // 直接使用 discipleList
       adminOnly: true,
       icon: '📄'
     },
     { 
       key: TabKey.Certificate, 
-      label: translations.certificateTitle || '皈依證書',
+      label: translations.certificateGenTitleHtmlPrint, // 使用我們上次新增的、更精確的 key
       adminOnly: true,
       icon: '📕'
     },
