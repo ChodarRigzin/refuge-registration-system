@@ -1,4 +1,4 @@
-// src/App.tsx - 最終、完整、已修正語法且功能完整的版本
+// src/App.tsx - 最終、完整、已修正樣式和加上連結的版本
 
 import React, { useState, useContext, useCallback, useEffect } from 'react';
 import { AppContext, AppProvider, AppContextType } from './contexts/AppContext';
@@ -23,25 +23,11 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// --- Error Fallback Component (維持不變) ---
-const ErrorFallback = ({ error }: { error?: Error }) => (
-  <div className="flex items-center justify-center min-h-screen bg-[#f8f9fa] p-4">
-    <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-      <div className="text-6xl mb-4">⚠️</div>
-      <h2 className="text-xl font-semibold text-gray-800 mb-2">系統發生錯誤</h2>
-      <p className="text-gray-600 mb-4">{error?.message || '很抱歉，系統發生了錯誤。請重新整理頁面再試一次。'}</p>
-      <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#8B6F47] text-white rounded-md hover:bg-[#7A5F3C] transition-colors">重新整理頁面</button>
-    </div>
-  </div>
-);
-
 // --- Header Component ---
 const StyledHeader = ({ 
   onMenuToggle, isMobile, onLoginClick 
 }: { 
-  onMenuToggle: () => void;
-  isMobile: boolean;
-  onLoginClick: () => void;
+  onMenuToggle: () => void; isMobile: boolean; onLoginClick: () => void;
 }) => {
   const context = useContext(AppContext) as AppContextType;
   const { translations, isAdmin, logout } = context;
@@ -71,17 +57,11 @@ const StyledHeader = ({
   );
 };
 
-// --- Sidebar Component (簡化了翻譯邏輯) ---
+// --- Sidebar Component (已加入連結並恢復完整樣式) ---
 const SidebarNav = ({ 
   activeTab, onTabChange, isAdmin, translations, isOpen, onClose, isMobile 
 }: {
-  activeTab: TabKey;
-  onTabChange: (tab: TabKey) => void;
-  isAdmin: boolean;
-  translations: Translations;
-  isOpen: boolean;
-  onClose: () => void;
-  isMobile: boolean;
+  activeTab: TabKey; onTabChange: (tab: TabKey) => void; isAdmin: boolean; translations: Translations; isOpen: boolean; onClose: () => void; isMobile: boolean;
 }) => {
   const navItems = [
     { key: TabKey.Registration, label: translations.registrationFormTitle, adminOnly: false, icon: '✎' },
@@ -97,8 +77,15 @@ const SidebarNav = ({
   return (
     <>
       {isMobile && isOpen && (<div className="fixed inset-0 bg-black/50 z-[105] md:hidden" onClick={onClose} aria-label="Close menu"/>)}
-      <aside className={`fixed top-[60px] left-0 w-[260px] h-[calc(100vh-60px)] bg-white ... no-print ... ${isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}`}>
-        <div className="p-4 border-b border-gray-200"><h2 className="text-xs font-semibold ...">{translations[ORGANIZATION_NAME_KEY]}</h2></div>
+      <aside className={`fixed top-[60px] left-0 w-[260px] h-[calc(100vh-60px)] bg-white border-r border-gray-200 flex flex-col no-print transition-transform duration-300 ease-in-out z-[106] ${isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}`}>
+        <a 
+          href="http://www.rigzin-chenpo.org/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="block p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors"
+        >
+          <h2 className="text-xs font-semibold text-gray-800 mb-0">{translations[ORGANIZATION_NAME_KEY]}</h2>
+        </a>
         <nav className="flex-1 overflow-y-auto py-2">
           <ul className="space-y-1 px-2">
             {navItems.map((item) => {
@@ -106,7 +93,7 @@ const SidebarNav = ({
               const isActive = activeTab === item.key && !isLocked;
               return (
                 <li key={item.key}>
-                  <button onClick={() => !isLocked && handleTabClick(item.key)} className={`relative flex ... ${isActive ? 'bg-[#FFF3E0]...' : isLocked ? 'text-gray-400...' : 'text-gray-700...'}`} disabled={isLocked}>
+                  <button onClick={() => !isLocked && handleTabClick(item.key)} className={`relative flex items-center gap-3 w-full text-left py-3 px-4 text-sm transition-all duration-200 rounded-md ${isActive ? 'bg-[#FFF3E0] text-[#8B6F47] font-semibold' : isLocked ? 'text-gray-400 bg-gray-50 cursor-not-allowed opacity-60' : 'text-gray-700 hover:bg-gray-100 cursor-pointer hover:text-[#8B6F47]'}`} disabled={isLocked}>
                     {isActive && (<div className="absolute left-0 top-0 h-full w-1 bg-[#D4A574] rounded-l-md"></div>)}
                     <span className="text-lg flex-shrink-0">{item.icon}</span>
                     <span className="block text-sm font-medium flex-grow">{item.label}</span>
@@ -117,7 +104,9 @@ const SidebarNav = ({
             })}
           </ul>
         </nav>
-        <div className="p-4 border-t ..."><div>© 2024 {translations[ORGANIZATION_NAME_KEY]}</div></div>
+        <div className="p-4 border-t border-gray-100 text-xs text-gray-500 text-center">
+          <div>{translations.copyright}</div>
+        </div>
       </aside>
     </>
   );
@@ -143,7 +132,7 @@ const AppContent = () => {
   }, []);
 
   useEffect(() => {
-    if (!context.isAdmin && (activeTab === TabKey.List || activeTab === TabKey.Certificate)) {
+    if (context && !context.isAdmin && (activeTab === TabKey.List || activeTab === TabKey.Certificate)) {
       setActiveTab(TabKey.Registration);
     }
   }, [context.isAdmin, activeTab]);
@@ -191,7 +180,7 @@ const AppContent = () => {
       <StyledHeader onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} isMobile={isMobile} onLoginClick={openLoginModal} />
       <SidebarNav activeTab={activeTab} onTabChange={handleTabChange} isAdmin={isAdmin} translations={translations} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
       <main className={`transition-all duration-300 pt-[60px] min-h-[calc(100vh-60px)] ${!isMobile ? 'md:ml-[260px]' : ''}`}>
-        <div className="p-4 md:p-8 h-full"><div className="bg-white rounded-lg shadow-md p-4 ... min-h-[calc(100vh-140px)]"><div className="h-full overflow-y-auto">{renderTabContent()}</div></div></div>
+        <div className="p-4 md:p-8 h-full"><div className="bg-white rounded-lg shadow-md p-4 md:p-6 lg:p-8 min-h-[calc(100vh-140px)]"><div className="h-full overflow-y-auto">{renderTabContent()}</div></div></div>
       </main>
       <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} title={translations.adminLogin || '管理員登入'}>
         <form onSubmit={handleLogin}>
