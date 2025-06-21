@@ -1,4 +1,4 @@
-// src/constants.ts - 最終完整版
+// 檔案路徑： src/constants.ts
 
 import { AllTranslations } from './types';
 
@@ -12,7 +12,7 @@ export const initialTranslations: AllTranslations = {
     organizationName: "噶陀仁珍千寶佛學會",
     registrationFormTitle: "皈依登記表",
     discipleList: "皈依名單",
-    certificateGenTitleHtmlPrint: "皈依證書", // 側欄和內容區都用這個
+    certificateGenTitleHtmlPrint: "皈依證書",
     
     // --- 使用者狀態 ---
     guest: "訪客",
@@ -70,7 +70,8 @@ export const initialTranslations: AllTranslations = {
     adminOnlyList: "只有管理員可以查看此頁面。",
     adminOnlyCert: "只有管理員可以訪問此頁面。",
     loginError: "信箱或密碼錯誤！",
-    phoneHint: "請包含國碼，例如台灣 +886，馬來西亞 +60",
+    phoneHint: "請包含國碼，例如台灣 +886，中國 +86，香港 +852，澳門 +853，馬來西亞 +60，新加坡 +65，美國 +1。",
+    nationalityHint: "港澳地區用戶請註明『香港』或『澳門』，而非僅填寫『中國』。",
     invalidPhoneWithCountryCode: "請輸入包含國碼的完整電話號碼 (例如 +886912345678)",
     invalidPhoneWithCountryCodeShort: "格式錯誤 (應為 +國碼號碼)",
     fieldRequired: "此欄位為必填",
@@ -156,7 +157,8 @@ export const initialTranslations: AllTranslations = {
     adminOnlyList: "Only administrators can view this page.",
     adminOnlyCert: "Only administrators can access this page.",
     loginError: "Invalid email or password!",
-    phoneHint: "Include country code, e.g., +886 for Taiwan, +60 for Malaysia.",
+    phoneHint: "Please include the country code, e.g., Taiwan +886, China +86, Hong Kong +852, Macau +853, Malaysia +60, Singapore +65, USA +1.",
+    nationalityHint: "For users from Hong Kong or Macau, please specify the region instead of just 'China'.",
     invalidPhoneWithCountryCode: "Please enter a complete phone number with country code (e.g., +886912345678).",
     invalidPhoneWithCountryCodeShort: "Invalid format (e.g., +886...)",
     fieldRequired: "This field is required",

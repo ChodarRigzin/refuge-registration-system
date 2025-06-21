@@ -1,4 +1,4 @@
-// src/components/RegistrationForm.tsx - 最終完整版
+// 檔案路徑： src/components/RegistrationForm.tsx
 
 import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { AppContext, AppContextType } from '../contexts/AppContext';
@@ -10,7 +10,8 @@ import { Select } from './common/Select';
 export const RegistrationForm = () => {
   const context = useContext(AppContext) as AppContextType;
 
-  const getInitialFormDataState = useCallback(() => ({ name: '', gender: '' as '' | '男' | '女', nationality: context.language === 'en' ? 'Taiwan (R.O.C.)' : '中華民國', phone: '', address: '', email: '', refugeDate: new Date().toISOString().split('T')[0], refugePlace: '' }), [context.language]);
+  // (getInitialFormDataState 和其他邏輯保持不變...)
+  const getInitialFormDataState = useCallback(() => ({ name: '', gender: '' as '' | '男' | '女', nationality: '', phone: '', address: '', email: '', refugeDate: new Date().toISOString().split('T')[0], refugePlace: '' }), []);
 
   const [formData, setFormData] = useState(getInitialFormDataState());
   const [successMessage, setSuccessMessage] = useState('');
@@ -37,7 +38,7 @@ export const RegistrationForm = () => {
   const handleBlur = (fieldName: string) => { setTouchedFields(prev => new Set(prev).add(fieldName)); };
 
   const validateForm = (): boolean => {
-    const requiredFields = ['name', 'gender', 'nationality', 'phone', 'address', 'email', 'refugeDate', 'refugePlace'];
+    const requiredFields = ['name', 'gender', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
     for (const field of requiredFields) {
       if (!formData[field as keyof typeof formData]) {
         setErrorMessage(translations.fillAllRequired);
@@ -90,7 +91,9 @@ export const RegistrationForm = () => {
   const getFieldError = (fieldName: string): string | null => {
     if (!touchedFields.has(fieldName)) return null;
     const value = formData[fieldName as keyof typeof formData] as string;
-    if (!value) { return translations.fieldRequired; }
+    if (fieldName !== 'address' && !value) {
+      return translations.fieldRequired;
+    }
     if (fieldName === 'email' && value) {
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(value)) return translations.invalidEmail;
@@ -128,13 +131,16 @@ export const RegistrationForm = () => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">{translations.subheadingContactInfo}</h3>
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                <Input label={translations.nationality} id="nationality" name="nationality" value={formData.nationality} onChange={handleChange} onBlur={() => handleBlur('nationality')} placeholder={translations.nationalityPlaceholder} isRequired error={getFieldError('nationality')} disabled={isSubmitting}/>
+                <div>
+                  <Input label={translations.nationality} id="nationality" name="nationality" value={formData.nationality} onChange={handleChange} onBlur={() => handleBlur('nationality')} placeholder={translations.nationalityPlaceholder} isRequired error={getFieldError('nationality')} disabled={isSubmitting}/>
+                  <p className="mt-1 text-xs text-gray-500">{translations.nationalityHint}</p>
+                </div>
                 <div>
                   <Input label={translations.phone} id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} onBlur={() => handleBlur('phone')} placeholder={translations.phonePlaceholder} isRequired error={getFieldError('phone')} disabled={isSubmitting}/>
                   <p className="mt-1 text-xs text-gray-500">{translations.phoneHint}</p>
                 </div>
               </div>
-              <Input label={translations.address} id="address" name="address" value={formData.address} onChange={handleChange} onBlur={() => handleBlur('address')} placeholder={translations.addressPlaceholder} isRequired error={getFieldError('address')} disabled={isSubmitting}/>
+              <Input label={translations.address} id="address" name="address" value={formData.address} onChange={handleChange} onBlur={() => handleBlur('address')} placeholder={translations.addressPlaceholder} disabled={isSubmitting}/>
               <Input label={translations.email} id="email" name="email" type="email" value={formData.email} onChange={handleChange} onBlur={() => handleBlur('email')} placeholder={translations.emailPlaceholder} isRequired error={getFieldError('email')} disabled={isSubmitting}/>
             </div>
           </div>
