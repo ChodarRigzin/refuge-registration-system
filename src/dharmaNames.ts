@@ -1,15 +1,15 @@
 
 export interface DharmaNameEntry {
   id: number;
-  name: string; // Tibetan Script e.g., "རིག་འཛིན་འཚོ་གནམ།"
-  phonetic: string; // Chinese Phonetic Transcription e.g., "仁珍漕南"
-  meaning: string; // Chinese Meaning e.g., "持明護天"
+  name: string; // Tibetan Script e.g., “རིག་འཛིན་དཔལ་ཆུ།”
+  phonetic: string; // Chinese Phonetic Transcription e.g., “仁珍貝區”
+  meaning: string; // Chinese Meaning e.g., “持明吉水”
 }
 
 // A subset of the provided Dharma Names for demonstration
 // Corrected based on user feedback: name = Tibetan, phonetic = Chinese Transcription
 export const dharmaNameList: DharmaNameEntry[] = [
-  { id: 268, name: “རིག་འཛིན་དཔལ་ཆུ།”, phonetic: “仁珍貝區", meaning: “持明吉水” },
+{ id: 268, name: “རིག་འཛིན་དཔལ་ཆུ།”, phonetic: “仁珍貝區”, meaning: “持明吉水” },
 { id: 269, name: “རིག་འཛིན་དཔལ་འཕྱོན།”, phonetic: “仁珍貝軒”, meaning: “持明吉萱” },
 { id: 270, name: “རིག་འཛིན་དཔལ་མཚན།”, phonetic: “仁珍貝參”,  meaning: “持明吉幢” },
 { id: 271, name: “རིག་འཛིན་དཔལ་འཕན།”, phonetic: “仁珍貝攀”,  meaning: “持明吉幡” },
@@ -20,7 +20,7 @@ export const dharmaNameList: DharmaNameEntry[] = [
 { id: 276, name: “རིག་འཛིན་དཔལ་བཞུར།”, phonetic: “仁珍貝饈”,  meaning: “持明吉流” },
 { id: 277, name: “རིག་འཛིན་དཔལ་འཐོན།”, phonetic: “仁珍貝黗”,  meaning: “持明吉靄” },
 { id: 278, name: “རིག་འཛིན་དཔལ་འཁོར།”, phonetic: “仁珍貝蔻”,  meaning: “持明吉輪” },
-{ id: 279, name: “རིག་འཛིན་དཔལ་འབྲས, phonetic: “仁珍貝紮”,  meaning: “持明吉果” },
+{ id: 279, name: “རིག་འཛིན་དཔལ་འབྲས”, phonetic: “仁珍貝紮”,  meaning: “持明吉果” },
 { id: 280, name: “རིག་འཛིན་དཔལ་བཅོས།”, phonetic: “仁珍貝玖”,  meaning: “持明吉治” },
 { id: 281, name: “རིག་འཛིན་དཔལ་དལ།”, phonetic: “仁珍貝繨”,  meaning: “持明吉悠” },
 { id: 282, name: “རིག་འཛིན་དཔལ་སྤྱང་།”, phonetic: “仁珍貝江”,  meaning: “持明吉聰” },
