@@ -1,5 +1,3 @@
-// src/components/RegistrationList.tsx - 最終、完整、已啟用所有功能的版本
-
 import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AppContext, AppContextType } from '../contexts/AppContext';
 import { Refugee, DharmaNameEntry } from '../types';
@@ -57,7 +55,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     return refugeeData.filter(person =>
       person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       person.phone.includes(searchTerm) ||
-      person.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (person.address && person.address.toLowerCase().includes(searchTerm.toLowerCase())) || // Address can be null/undefined
       (person.email && person.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (person.dharmaNamePhonetic && person.dharmaNamePhonetic.toLowerCase().includes(searchTerm.toLowerCase()))
     )
@@ -82,7 +80,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const handleViewPerson = (person: Refugee) => {
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50';
-    const content = `<div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"><h3 class="text-lg font-semibold mb-4 text-gray-800">${translations.viewDetails || '詳細資料'}</h3><div class="space-y-3 text-sm"><div><span class="font-medium text-gray-600">${translations.name}：</span>${person.name}</div><div><span class="font-medium text-gray-600">${translations.gender}：</span>${language === 'en' ? (person.gender === '男' ? 'Male' : 'Female') : person.gender}</div><div><span class="font-medium text-gray-600">${translations.nationality}：</span>${person.nationality}</div><div><span class="font-medium text-gray-600">${translations.phone}：</span>${person.phone}</div><div><span class="font-medium text-gray-600">${translations.address}：</span>${person.address}</div><div><span class="font-medium text-gray-600">${translations.email}：</span>${person.email || '-'}</div><div><span class="font-medium text-gray-600">${translations.refugeDate}：</span>${person.refugeDate}</div><div><span class="font-medium text-gray-600">${translations.refugePlace}：</span>${person.refugePlace}</div>${person.dharmaName ? `<div class="pt-3 border-t border-gray-200"><div><span class="font-medium text-gray-600">${translations.dharmaName}：</span>${person.dharmaName}</div><div><span class="font-medium text-gray-600">${translations.dharmaNamePhonetic}：</span>${person.dharmaNamePhonetic || '-'}</div><div><span class="font-medium text-gray-600">${translations.dharmaNameMeaning}：</span>${person.dharmaNameMeaning || '-'}</div></div>` : ''}</div><button class="mt-6 w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">${translations.close || '關閉'}</button></div>`;
+    const content = `<div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"><h3 class="text-lg font-semibold mb-4 text-gray-800">${translations.viewDetails || '詳細資料'}</h3><div class="space-y-3 text-sm"><div><span class="font-medium text-gray-600">${translations.name}：</span>${person.name}</div><div><span class="font-medium text-gray-600">${translations.gender}：</span>${language === 'en' ? (person.gender === '男' ? 'Male' : 'Female') : person.gender}</div><div><span class="font-medium text-gray-600">${translations.nationality}：</span>${person.nationality}</div><div><span class="font-medium text-gray-600">${translations.phone}：</span>${person.phone}</div><div><span class="font-medium text-gray-600">${translations.address}：</span>${person.address || '-'}</div><div><span class="font-medium text-gray-600">${translations.email}：</span>${person.email || '-'}</div><div><span class="font-medium text-gray-600">${translations.refugeDate}：</span>${person.refugeDate}</div><div><span class="font-medium text-gray-600">${translations.refugePlace}：</span>${person.refugePlace}</div>${person.dharmaName ? `<div class="pt-3 border-t border-gray-200"><div><span class="font-medium text-gray-600">${translations.dharmaName}：</span>${person.dharmaName}</div><div><span class="font-medium text-gray-600">${translations.dharmaNamePhonetic}：</span>${person.dharmaNamePhonetic || '-'}</div><div><span class="font-medium text-gray-600">${translations.dharmaNameMeaning}：</span>${person.dharmaNameMeaning || '-'}</div></div>` : ''}</div><button class="mt-6 w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">${translations.close || '關閉'}</button></div>`;
     modal.innerHTML = content;
     document.body.appendChild(modal);
     modal.addEventListener('click', (e) => { if (e.target === modal || (e.target as HTMLElement).tagName === 'BUTTON') { document.body.removeChild(modal); } });
@@ -102,8 +100,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     e.preventDefault();
     if (editingPerson && editFormData) {
       if (!editFormData.name || !editFormData.gender || !editFormData.nationality || 
-          !editFormData.phone || !editFormData.address || !editFormData.refugeDate || 
-          !editFormData.refugePlace) {
+          !editFormData.phone || !editFormData.refugeDate || !editFormData.refugePlace) {
         alert(translations.fillAllRequired);
         return;
       }
@@ -237,7 +234,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
               <Input label={translations.nationality} name="nationality" value={editFormData.nationality || ''} onChange={handleEditFormChange} isRequired />
               <Input label={translations.phone} name="phone" type="tel" value={editFormData.phone || ''} onChange={handleEditFormChange} isRequired />
             </div>
-            <Input label={translations.address} name="address" value={editFormData.address || ''} onChange={handleEditFormChange} isRequired />
+            <Input label={translations.address} name="address" value={editFormData.address || ''} onChange={handleEditFormChange} />
             <Input label={translations.email} name="email" type="email" value={editFormData.email || ''} onChange={handleEditFormChange} />
             
             <div className="grid md:grid-cols-2 gap-4">
