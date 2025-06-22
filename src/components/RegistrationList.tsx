@@ -8,6 +8,12 @@ import { Modal } from './common/Modal';
 import { AccessDenied } from './AccessDenied';
 import { dharmaNameList } from '../dharmaNames';
 
+// ***** 1. 引入新的服務函式和 UI 組件 *****
+import { getCertificateAsBase64 } from '../services/pdfCertificateService';
+// 假設您有一個 Textarea 組件。如果沒有，請用 <textarea className="..."></textarea> 代替
+//import { Textarea } from './common/Textarea'; 
+
+
 interface RegistrationListProps {
   onLoginClick: () => void;
 }
@@ -24,6 +30,16 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+// ***** 2. 為寄送郵件 Modal 新增 state *****
+  // 這段要加在其他 useState 宣告的旁邊
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+  const [sendingPerson, setSendingPerson] = useState<Refugee | null>(null);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sendModalMessage, setSendModalMessage] = useState('');
+
 
   useEffect(() => {
     if (editingPerson) {
@@ -135,6 +151,65 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }
   };
 
+  const handleOpenSendModal = (person: Refugee) => {
+    if (!person.email) {
+      alert(translations.noEmailToSent || '此用戶沒有登記電子郵件，無法寄送。');
+      return;
+    }
+    setSendingPerson(person);
+    setEmailSubject(translations.defaultEmailSubject || `【噶陀仁珍千寶佛學會】您的皈依證`);
+    setEmailBody(
+      (translations.defaultEmailBody || `親愛的 {name} 您好，\n\n附件是您的皈依證電子檔，請查收。\n\n祝福您 法喜充滿！\n\n噶陀仁珍千寶佛學會 敬上`).replace('{name}', person.name)
+    );
+    setSendModalMessage('');
+    setIsSending(false);
+    setIsSendModalOpen(true);
+  };
+
+  const handleConfirmSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sendingPerson) return;
+
+    setIsSending(true);
+    setSendModalMessage(translations.generatingAndSending || '正在生成PDF並準備寄送...');
+
+    try {
+      const pdfBase64 = await getCertificateAsBase64(sendingPerson);
+
+      setSendModalMessage(translations.sendingEmail || '正在寄送電子郵件...');
+
+      const response = await fetch('/api/send-certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail: sendingPerson.email,
+          recipientName: sendingPerson.name,
+          pdfBase64: pdfBase64,
+          subject: emailSubject,
+          bodyText: emailBody,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || '發生未知錯誤');
+      }
+
+      setSendModalMessage(translations.emailSentSuccess || '郵件已成功寄出！');
+      setTimeout(() => {
+        setIsSendModalOpen(false);
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("郵件寄送失敗:", error);
+      setSendModalMessage(`${translations.emailSentFailed || '寄送失敗'}: ${error.message}`);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+
   return (
     <div className="w-full">
       <h2 className="text-2xl font-bold text-[#8B6F47] mb-6 flex items-center gap-3">
@@ -176,7 +251,19 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
                   <div className="flex gap-1 justify-center">
                     <Button onClick={() => handleViewPerson(person)} variant="neutral" size="sm" className="!px-2 !py-1">⬉</Button>
                     <Button onClick={() => handleOpenEditModal(person)} variant="primary" size="sm" className="!px-2 !py-1">✎</Button>
-                    <Button onClick={() => handleDeleteClick(person.id)} variant="danger" size="sm" className="!px-2 !py-1">⨯</Button>
+                     {/* ***** 4. 加入郵件按鈕 ***** */}
+                    <Button 
+                      onClick={() => handleOpenSendModal(person)} 
+                      variant="success" // 你可能需要一個綠色的按鈕變體
+                      size="sm" 
+                      className="!px-2 !py-1"
+                      title={translations.sendCertificateEmail || '寄送皈依證郵件'}
+                      disabled={!person.email} // 如果沒有 email 就禁用
+                    >
+                      ✉
+                    </Button>
+
+                    <Button onClick={() => handleDeleteClick(person.id)} variant="danger" size="sm" className="!px-2 !py-1" title={translations.delete || '刪除'}>⨯</Button>
                   </div>
                 </td>
               </tr>
@@ -185,6 +272,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
           </tbody>
         </table>
       </div>
+
+
+
 
       {totalPages > 1 && (
         <div className="mt-4 flex justify-center items-center gap-2">
@@ -262,6 +352,73 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
           </form>
         </Modal>
       )}
-    </div>
-  );
+
+
+   {/* ***** 5. 在此處加入寄送郵件的 Modal ***** */}
+      {/* 它的位置就在其他 Modal 的旁邊，在 return 的最外層 div 結束前 */}
+      {sendingPerson && (
+        <Modal 
+          isOpen={isSendModalOpen} 
+          onClose={() => setIsSendModalOpen(false)} 
+          title={`${translations.sendCertificateTo || '寄送皈依證給'}: ${sendingPerson.name}`}
+          size="lg"
+        >
+          <form onSubmit={handleConfirmSend} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">{translations.recipientEmail || '收件人'}</label>
+              <p className="mt-1 text-md text-gray-900">{sendingPerson.email}</p>
+            </div>
+            
+            <Input 
+              label={translations.emailSubject || '郵件主旨'}
+              value={emailSubject}
+              onChange={(e) => setEmailSubject(e.target.value)}
+              disabled={isSending}
+              isRequired
+            />
+
+            {/* 如果您沒有 Textarea 組件，可以用下面這段原生 textarea 代替 */}
+            {/* 
+            <div>
+              <label htmlFor="emailBody" className="block text-sm font-medium text-gray-700">{translations.emailBody || '郵件內文'}</label>
+              <textarea
+                id="emailBody"
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                rows={8}
+                disabled={isSending}
+                required
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+            */}
+            <Textarea
+              label={translations.emailBody || '郵件內文'}
+              value={emailBody}
+              onChange={(e) => setEmailBody(e.target.value)}
+              rows={8}
+              disabled={isSending}
+              isRequired
+            />
+            
+            {sendModalMessage && (
+              <div className={`p-3 text-center text-sm rounded-md ${sendModalMessage.includes('失敗') || sendModalMessage.includes('Failed') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                {sendModalMessage}
+              </div>
+            )}
+            
+            <div className="mt-6 flex gap-3 pt-4 border-t">
+              <Button type="submit" variant="primary" size="lg" disabled={isSending}>
+                {isSending ? (translations.sending || '寄送中...') : (translations.confirmAndSend || '確認寄送')}
+              </Button>
+              <Button type="button" onClick={() => setIsSendModalOpen(false)} variant="secondary" size="lg" disabled={isSending}>
+                {translations.cancel || '取消'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+    </div> // <--- return 的最外層 div 的結束標籤
+  ); // <--- return() 的結束括號
 };

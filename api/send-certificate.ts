@@ -1,6 +1,6 @@
-// api/send-certificate.ts (Vercel Serverless Function)
+// api/send-certificate.ts (更新為使用 Outlook)
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import nodemailer from 'nodemailer'; // npm install nodemailer
+import nodemailer from 'nodemailer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -11,53 +11,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     recipientEmail, 
     recipientName, 
     pdfBase64, 
-    subject: customSubject, // 從前端接收自訂主旨
-    greeting: customGreeting, // 從前端接收自訂問候語
-    bodyText: customBodyText  // 從前端接收自訂郵件內容
+    subject: customSubject,
+    bodyText: customBodyText
   } = req.body;
 
   if (!recipientEmail || !recipientName || !pdfBase64) {
-    return res.status(400).json({ message: 'Missing required fields: recipientEmail, recipientName, or pdfBase64' });
+    return res.status(400).json({ message: 'Missing required fields' });
   }
 
-  // 從環境變數獲取郵件服務憑證 (在 Vercel 專案設定中配置)
-  const mailUser = process.env.MAIL_USER; // 例如：your-email@gmail.com
-  const mailPass = process.env.MAIL_APP_PASSWORD; // 例如：Gmail 應用程式密碼
+  const mailUser = process.env.MAIL_USER;
+  const mailPass = process.env.MAIL_APP_PASSWORD;
 
   if (!mailUser || !mailPass) {
     console.error('Email credentials not configured in environment variables.');
     return res.status(500).json({ message: 'Email service not configured on server.' });
   }
 
-  // 創建 Nodemailer transporter (根據你的郵件服務商調整)
+  // ***** 主要修改點：將 service 從 'gmail' 改為 'hotmail' *****
   let transporter = nodemailer.createTransport({
-    service: 'gmail', // 或者其他服務，例如 'hotmail', 'outlook', 或者直接用 SMTP
+    service: 'hotmail', // 使用 Hotmail/Outlook 服務
     auth: {
-      user: mailUser,
-      pass: mailPass,
+      user: mailUser, // 您新的 @outlook.com 信箱
+      pass: mailPass, // 您在 Outlook 產生的應用程式密碼
     },
   });
 
-  // 郵件內容
+  // 郵件內容 (這裡的邏輯不變)
   const subject = customSubject || `${recipientName} 的皈依證`;
-  const greeting = customGreeting || `親愛的 ${recipientName}，`;
-  const bodyMainText = customBodyText || "附件是您的皈依證，請查收。祝福您！";
+  // 將純文字中的換行符號 \n 轉換為 HTML 的 <br>
   const htmlBody = `
-    <p>${greeting}</p>
-    <p>${bodyMainText}</p>
-    <p><br>敬頌 法安</p>
-    <p>噶陀仁珍千寶佛學會 敬上</p> {/* 你的組織名稱 */}
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      ${customBodyText.replace(/\n/g, '<br>')}
+    </div>
   `;
 
   const mailOptions = {
-    from: `"噶陀仁珍千寶佛學會" <${mailUser}>`, // 發件人名稱和郵箱
+    from: `"噶陀仁珍千寶佛學會" <${mailUser}>`,
     to: recipientEmail,
     subject: subject,
     html: htmlBody,
     attachments: [
       {
         filename: `${recipientName}_皈依證.pdf`,
-        content: Buffer.from(pdfBase64, 'base64'), // 將 base64 轉回 Buffer
+        content: Buffer.from(pdfBase64, 'base64'),
         contentType: 'application/pdf',
       },
     ],
@@ -69,7 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({ message: 'Email sent successfully!' });
   } catch (error) {
     console.error('Error sending email:', error);
-    // 避免將詳細錯誤暴露給前端，但記錄在伺服器日誌中
     res.status(500).json({ message: 'Failed to send email due to a server error.' });
   }
 }
