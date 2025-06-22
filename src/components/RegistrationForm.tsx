@@ -1,5 +1,3 @@
-// 檔案路徑： src/components/RegistrationForm.tsx
-
 import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { AppContext, AppContextType } from '../contexts/AppContext';
 import { Refugee } from '../types';
@@ -11,7 +9,7 @@ export const RegistrationForm = () => {
   const context = useContext(AppContext) as AppContextType;
 
   // (getInitialFormDataState 和其他邏輯保持不變...)
-  const getInitialFormDataState = useCallback(() => ({ name: '', gender: '' as '' | '男' | '女', nationality: '', phone: '', address: '', email: '', refugeDate: new Date().toISOString().split('T')[0], refugePlace: '' }), []);
+  const getInitialFormDataState = useCallback(() => ({ name: '', gender: '' as '' | '男' | '女', dateOfBirth: '', nationality: '', phone: '', address: '', email: '', refugeDate: new Date().toISOString().split('T')[0], refugePlace: '' }), []);
 
   const [formData, setFormData] = useState(getInitialFormDataState());
   const [successMessage, setSuccessMessage] = useState('');
@@ -38,7 +36,7 @@ export const RegistrationForm = () => {
   const handleBlur = (fieldName: string) => { setTouchedFields(prev => new Set(prev).add(fieldName)); };
 
   const validateForm = (): boolean => {
-    const requiredFields = ['name', 'gender', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
+    const requiredFields = ['name', 'gender', 'dateOfBirth', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
     for (const field of requiredFields) {
       if (!formData[field as keyof typeof formData]) {
         setErrorMessage(translations.fillAllRequired);
@@ -118,13 +116,14 @@ export const RegistrationForm = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">{translations.subheadingBasicInfo}</h3>
-            <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+            <div className="grid md:grid-cols-3 gap-4 md:gap-6">
               <Input label={translations.name} id="name" name="name" value={formData.name} onChange={handleChange} onBlur={() => handleBlur('name')} placeholder={translations.namePlaceholder} isRequired error={getFieldError('name')} disabled={isSubmitting}/>
               <Select label={translations.gender} id="gender" name="gender" value={formData.gender} onChange={handleChange} onBlur={() => handleBlur('gender')} isRequired error={getFieldError('gender')} disabled={isSubmitting}>
                 <option value="">{translations.selectGender}</option>
                 <option value="男">{translations.male}</option>
                 <option value="女">{translations.female}</option>
               </Select>
+              <Input label={translations.dateOfBirth} id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} onBlur={() => handleBlur('dateOfBirth')} isRequired error={getFieldError('dateOfBirth')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]}/>
             </div>
           </div>
           <div>
