@@ -1,4 +1,4 @@
-// api/send-certificate.ts (最終版: 使用明確的 SMTP 設定)
+// api/send-certificate.ts (最終版: 單一附件 + 明確 SMTP 設定)
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
 
@@ -13,11 +13,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       recipientName, 
       subject,
       bodyText,
-      attachments,
+      pdfBase64, // 確認接收的是單一 pdfBase64 字串
     } = req.body;
 
-    if (!recipientEmail || !recipientName || !attachments || !Array.isArray(attachments) || attachments.length === 0) {
-      return res.status(400).json({ message: '缺少必要欄位，或附件格式不正確' });
+    if (!recipientEmail || !recipientName || !pdfBase64) {
+      return res.status(400).json({ message: '缺少必要欄位' });
     }
 
     const mailUser = process.env.MAIL_USER;
@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ message: 'Email service not configured.' });
     }
 
-    // ***** 主要修改點：從 service 捷徑改為明確的 SMTP 設定 *****
+    // ***** 主要修改點：使用最穩定、明確的 SMTP 設定 *****
     let transporter = nodemailer.createTransport({
       host: "smtp-mail.outlook.com", // Outlook 的 SMTP 伺服器地址
       port: 587, // Outlook 的標準加密端口
@@ -42,33 +42,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
-    const mailAttachments = attachments.map(att => ({
-      filename: att.filename,
-      content: Buffer.from(att.content, 'base64'),
-      contentType: 'application/pdf',
-    }));
+    // 增加一個驗證步驟，可以提供更明確的錯誤訊息
+    await transporter.verify();
+    console.log("SMTP Server is ready to take messages");
 
     const mailOptions = {
       from: `"噶陀仁珍千寶佛學會" <${mailUser}>`,
       to: recipientEmail,
       subject: subject || `${recipientName} 的皈依證`,
       html: `<div style="font-family: Arial, sans-serif;">${(bodyText || '').replace(/\n/g, '<br>')}</div>`,
-      attachments: mailAttachments,
+      attachments: [{ // 確認是單一附件
+        filename: `皈依證_${recipientName}.pdf`,
+        content: Buffer.from(pdfBase64, 'base64'),
+        contentType: 'application/pdf',
+      }],
     };
-
-    // 增加一個驗證步驟，可以提供更明確的錯誤訊息
-    await transporter.verify();
-    console.log("Server is ready to take our messages");
 
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: 'Email sent successfully!' });
 
   } catch (error: any) {
     console.error('API Error:', error);
-    // 現在我們可以回傳更詳細的錯誤訊息
+    // 回傳更詳細的錯誤訊息
     res.status(500).json({ 
       message: 'Failed to send email due to a server error.',
-      error: error.message // 將實際的錯誤訊息也傳給前端
+      error: error.message 
     });
   }
 }
