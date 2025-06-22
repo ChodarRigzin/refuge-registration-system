@@ -378,28 +378,26 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
             />
 
             {/* 如果您沒有 Textarea 組件，可以用下面這段原生 textarea 代替 */}
-            {/* 
-            <div>
-              <label htmlFor="emailBody" className="block text-sm font-medium text-gray-700">{translations.emailBody || '郵件內文'}</label>
-              <textarea
-                id="emailBody"
-                value={emailBody}
-                onChange={(e) => setEmailBody(e.target.value)}
-                rows={8}
-                disabled={isSending}
-                required
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            */}
-            <Textarea
-              label={translations.emailBody || '郵件內文'}
-              value={emailBody}
-              onChange={(e) => setEmailBody(e.target.value)}
-              rows={8}
-              disabled={isSending}
-              isRequired
-            />
+            
+          
+    <div>
+     <label htmlFor="emailBody" className="block text-sm font-medium text-gray-700">
+       {translations.emailBody || '郵件內文'}
+       <span className="text-red-500 ml-1">*</span>
+      </label>
+      <textarea
+        id="emailBody"
+        value={emailBody}
+        onChange={(e) => setEmailBody(e.target.value)}
+        rows={8}
+        disabled={isSending}
+        required
+        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-50"
+      />
+    </div>
+            
+            
+            
             
             {sendModalMessage && (
               <div className={`p-3 text-center text-sm rounded-md ${sendModalMessage.includes('失敗') || sendModalMessage.includes('Failed') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
