@@ -93,12 +93,12 @@ async function generatePdfAsBase64(htmlContent: string): Promise<string> {
     for (let i = 0; i < sheets.length; i++) {
       const sheet = sheets[i];
       const canvas = await html2canvas(sheet, {
-        scale: 3,
+        scale: 2,
         useCORS: true,
         backgroundColor: null,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
       const pdfWidth = 210;
       const pdfHeight = 148;
 
