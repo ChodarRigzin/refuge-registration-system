@@ -200,8 +200,17 @@ export async function getCertificateAsBase64(personData: Refugee): Promise<strin
  * @returns {string} - 證書的 HTML 字串
  */
 function generateCertificateHTML(personData: any): string {
-    // ... 您原本完整的 HTML 模板字串貼在這裡 ...
-    // (我將使用您在問題中提供的完整 HTML 內容)
+   // 先格式化好日期，避免在 HTML 中寫邏輯
+    let formattedDate = '';
+    if (personData.refugeDate) {
+        try {
+            const date = new Date(personData.refugeDate + 'T00:00:00');
+            if (!isNaN(date.getTime())) {
+                formattedDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+            } else { formattedDate = personData.refugeDate; }
+        } catch(e) { formattedDate = personData.refugeDate; }
+    }
+ // 返回最終的 HTML 模板
     return `
     <!DOCTYPE html>
     <html lang="zh-TW">
@@ -268,29 +277,34 @@ function generateCertificateHTML(personData: any): string {
           font-size: 8pt;
           color: #888;
         }
-        .cover-background {
-          background-color: #8C1515;
-          color: #D4AF37;
-        }
-        .cover-background h1,
-        .cover-background .english,
-        .cover-background .motto,
-        .cover-background .footer-text,
-        .cover-background .footer-text span,
-        .cover-background .footer-text h2 {
-            color: #D4AF37;
-        }
-        .cover-background .logo {
-             filter: brightness(0) saturate(100%) invert(80%) sepia(29%) saturate(548%) hue-rotate(357deg) brightness(91%) contrast(91%);
-        }
+        /* --- 封面/封底修正 --- */
+        .cover-background { background-color: #8C1515; color: #D4AF37; }
+        .cover-background h1, .cover-background .english, .cover-background .motto, .cover-background .footer-text, .cover-background .footer-text span, .cover-background .footer-text h2 { color: #D4AF37; }
+        .cover-background .logo { filter: brightness(0) saturate(100%) invert(80%) sepia(29%) saturate(548%) hue-rotate(357deg) brightness(91%) contrast(91%); }
         .cover-page { text-align: center; }
-        .cover-page .page-content { display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        .cover-page .page-content {
+            display: block; /* 改為 block，不再使用 flex */
+            position: relative;
+            height: 100%;
+        }
         .cover-page h1 { font-size: 16pt; margin: 2mm 0; }
         .cover-page .motto { margin-top: 5mm; font-size: 11pt; line-height: 1.7; }
         .cover-page .logo { width: 25mm; height: 25mm; margin: 5mm 0; }
-        .cover-page .footer-text { position: absolute; bottom: 21mm; left: 0; right: 0; text-align: center; font-size: 9pt; line-height: 1.5; }
+        .cover-page .footer-text { position: absolute; bottom: 12mm; left: 0; right: 0; text-align: center; font-size: 9pt; line-height: 1.5; }
         .image-page { text-align: center; justify-content: center; }
-        .image-page img { max-width: 100%; max-height: 100mm; object-fit: contain; }
+        .image-page .img-container {
+            width: 100%;
+            height: 100mm; /* 給一個明確的高度容器 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-page img { 
+            max-width: 100%; 
+            max-height: 100mm; 
+            height: auto; /* 讓高度自動，避免壓扁 */ 
+            width: auto;  /* 讓寬度自動，避免拉伸 */
+            object-fit: contain; }
         .image-page h2 { font-size: 11pt; margin-top: 4mm; }
         .prayer-page { text-align: center; line-height: 2; }
         .prayer-page h2 { font-size: 14pt; margin-bottom: 5mm; }
@@ -365,12 +379,14 @@ function generateCertificateHTML(personData: any): string {
                 <div class="detail-section"><p class="tibetan">སྟོན་པ། མཉམ་མེད་ཐུབ་པའི་དབང་པོ་ཤཱཀྱའི་རྒྱལ།</p><p><strong>創教者：</strong>無等導師釋迦能仁王</p><p class="english">The teacher: Peerless Lord of Sages, King of the Shakyas.</p></div>
                 <div class="detail-section"><p class="tibetan">སྐྱབས་སྡོམ་གནང་མཁན།།ཀཿཐོག་རིག་འཛིན་ཆེན་པོ་པདྨ་དབང་ཆེན།།</p><p><strong>傳皈依戒師：</strong>噶陀仁珍千寶‧貝瑪旺晴</p><p class="english">Bestower of the Refuge Vows: H.E. Kathog Rigzin Chenpo, Pema Wangchen</p></div>
                 <div class="detail-section" style="margin-top: 15mm;">
-                    <div class="detail-item"><span class="detail-label">皈依者 Refuge Preceptor：</span><span class="detail-value" id="recipient-name"></span></div>
-                    <div class="detail-item"><span class="detail-label">皈依日期 Date of Refuge：</span><span class="detail-value" id="refuge-date"></span></div>
-                    <div class="detail-item"><span class="detail-label">皈依地點 Place of Refuge：</span><span class="detail-value" id="refuge-place"></span></div>
-                    <div class="detail-item"><span class="detail-label">法名原文 Original Dharma Name：</span><span class="detail-value" id="dharma-name-original"></span></div>
-                    <div class="detail-item"><span class="detail-label">法名音譯 Phonetic Dharma Name：</span><span class="detail-value" id="dharma-name-phonetic"></span></div>
-                    <div class="detail-item"><span class="detail-label">法名譯意 Meaning of Dharma Name：</span><span class="detail-value" id="dharma-name-meaning"></span></div>
+
+                   <!-- ***** 主要修改點：直接在這裡注入資料 ***** -->
+                    <div class="detail-item"><span class="detail-label">皈依者 Refuge Preceptor：</span><span class="detail-value">${personData.name || ''}</span></div>
+                    <div class="detail-item"><span class="detail-label">皈依日期 Date of Refuge：</span><span class="detail-value">${formattedDate}</span></div>
+                    <div class="detail-item"><span class="detail-label">皈依地點 Place of Refuge：</span><span class="detail-value">${personData.refugePlace || ''}</span></div>
+                    <div class="detail-item"><span class="detail-label">法名原文 Original Dharma Name：</span><span class="detail-value">${personData.dharmaName || ''}</span></div>
+                    <div class="detail-item"><span class="detail-label">法名音譯 Phonetic Dharma Name：</span><span class="detail-value">${personData.dharmaNamePhonetic || ''}</span></div>
+                    <div class="detail-item"><span class="detail-label">法名譯意 Meaning of Dharma Name：</span><span class="detail-value">${personData.dharmaNameMeaning || ''}</span></div>
                 </div>
             </div>
             <div class="page-number">2</div>
@@ -789,36 +805,7 @@ function generateCertificateHTML(personData: any): string {
     </div>
   </div>
 
-
-
- <script>
-        function populateData() {
-            const personData = ${JSON.stringify(personData)};
-            let formattedDate = '';
-            if (personData.refugeDate) {
-                try {
-                    const date = new Date(personData.refugeDate + 'T00:00:00');
-                    if (!isNaN(date.getTime())) {
-                        formattedDate = \`\${date.getFullYear()}年\${date.getMonth() + 1}月\${date.getDate()}日\`;
-                    } else { formattedDate = personData.refugeDate; }
-                } catch(e) { formattedDate = personData.refugeDate; }
-            }
-            const detailsPage = document.querySelector('.details-page');
-            if (detailsPage) {
-                detailsPage.querySelector('#recipient-name').textContent = personData.name || '';
-                detailsPage.querySelector('#refuge-date').textContent = formattedDate || '';
-                detailsPage.querySelector('#refuge-place').textContent = personData.refugePlace || '';
-                detailsPage.querySelector('#dharma-name-original').textContent = personData.dharmaName || '';
-                detailsPage.querySelector('#dharma-name-phonetic').textContent = personData.dharmaNamePhonetic || personData.buddhistName || '';
-                detailsPage.querySelector('#dharma-name-meaning').textContent = personData.dharmaNameMeaning || '';
-            }
-        }
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', populateData);
-        } else {
-            populateData();
-        }
-    <\/script>
+ 
     </body>
     </html>
     `;
