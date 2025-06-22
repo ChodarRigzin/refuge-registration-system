@@ -36,7 +36,7 @@ export const RegistrationForm = () => {
   const handleBlur = (fieldName: string) => { setTouchedFields(prev => new Set(prev).add(fieldName)); };
 
   const validateForm = (): boolean => {
-    const requiredFields = ['name', 'gender', 'dateOfBirth', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
+    const requiredFields = ['name', 'gender', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
     for (const field of requiredFields) {
       if (!formData[field as keyof typeof formData]) {
         setErrorMessage(translations.fillAllRequired);
@@ -123,7 +123,7 @@ export const RegistrationForm = () => {
                 <option value="男">{translations.male}</option>
                 <option value="女">{translations.female}</option>
               </Select>
-              <Input label={translations.dateOfBirth} id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} onBlur={() => handleBlur('dateOfBirth')} isRequired error={getFieldError('dateOfBirth')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]}/>
+              <Input label={translations.dateOfBirth} id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} onBlur={() => handleBlur('dateOfBirth')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]}/>
             </div>
           </div>
           <div>

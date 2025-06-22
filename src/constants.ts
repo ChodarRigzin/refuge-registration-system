@@ -12,6 +12,7 @@ export const initialTranslations: AllTranslations = {
     organizationName: "噶陀仁珍千寶佛學會",
     registrationFormTitle: "皈依登記表",
     discipleList: "皈依名單",
+    totalRecords: "共 {count} 筆資料", // <--- 在這裡新增
     certificateGenTitleHtmlPrint: "皈依證書",
     
     // --- 使用者狀態 ---
@@ -23,6 +24,7 @@ export const initialTranslations: AllTranslations = {
     // --- 通用欄位 & 按鈕 ---
     name: "姓名",
     gender: "性別",
+    dateOfBirth: "出生年月日",
     nationality: "國籍",
     phone: "電話",
     address: "地址",
@@ -35,6 +37,7 @@ export const initialTranslations: AllTranslations = {
     selectGender: "請選擇性別",
     male: "男",
     female: "女",
+
     submitRegistration: "提交登記",
     clearForm: "清除重填",
     search: "搜尋",
@@ -44,6 +47,9 @@ export const initialTranslations: AllTranslations = {
     delete: "刪除",
     saveChanges: "儲存變更",
     cancel: "取消",
+    previousPage: "上一頁", // <--- 新增
+    nextPage: "下一頁",     // <--- 新增
+    pageIndicator: "第 {currentPage} / {totalPages} 頁", // <--- 新增
     login: "登入",
     id: "ID",
     actions: "操作",
@@ -83,6 +89,7 @@ export const initialTranslations: AllTranslations = {
     
     // --- 輸入框預設文字 (Placeholder) ---
     namePlaceholder: "請輸入您的姓名",
+    dateOfBirthPlaceholder: "請選擇您的出生日期",
     nationalityPlaceholder: "請輸入您的國籍",
     phonePlaceholder: "+886912345678",
     addressPlaceholder: "請輸入您的地址",
@@ -99,6 +106,7 @@ export const initialTranslations: AllTranslations = {
     organizationName: "Kathog Rigzin Chenpo Dharma Association",
     registrationFormTitle: "Refuge Registration Form",
     discipleList: "Refugee List",
+    totalRecords: "Total {count} records", // <--- Add this line
     certificateGenTitleHtmlPrint: "Certificate Preview & Print",
 
     // --- User Status ---
@@ -110,6 +118,7 @@ export const initialTranslations: AllTranslations = {
     // --- Common Fields & Buttons ---
     name: "Name",
     gender: "Gender",
+    dateOfBirth: "Date of Birth",
     nationality: "Nationality",
     phone: "Phone",
     address: "Address",
@@ -131,6 +140,9 @@ export const initialTranslations: AllTranslations = {
     delete: "Delete",
     saveChanges: "Save Changes",
     cancel: "Cancel",
+    previousPage: "Previous", // <--- Add
+    nextPage: "Next",       // <--- Add
+    pageIndicator: "Page {currentPage} of {totalPages}", // <--- Add
     login: "Login",
     id: "ID",
     actions: "Actions",
@@ -170,6 +182,7 @@ export const initialTranslations: AllTranslations = {
 
     // --- Placeholders ---
     namePlaceholder: "Please enter your name",
+    dateOfBirthPlaceholder: "Please select your date of birth", 
     nationalityPlaceholder: "Please enter your nationality",
     phonePlaceholder: "+886912345678",
     addressPlaceholder: "Please enter your address",

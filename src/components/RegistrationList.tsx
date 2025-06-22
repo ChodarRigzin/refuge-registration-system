@@ -212,11 +212,13 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
 
   return (
     <div className="w-full">
-      <h2 className="text-2xl font-bold text-[#8B6F47] mb-6 flex items-center gap-3">
-        <span className="text-2xl text-[#D4A574]">◈</span>
-        {translations.discipleList}
-        <span className="text-sm font-normal text-gray-600 ml-auto">共 {filteredData.length} 筆資料</span>
-      </h2>
+     <h2 className="text-2xl font-bold text-[#8B6F47] mb-6 flex items-center gap-3">
+     <span className="text-2xl text-[#D4A574]">◈</span>
+     {translations.discipleList}
+     <span className="text-sm font-normal text-gray-600 ml-auto">
+    {(translations.totalRecords || "共 {count} 筆資料").replace('{count}', filteredData.length)}
+  </span>
+</h2>
 
       <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <Input type="text" placeholder={translations.searchPlaceholder} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-grow !mb-0" aria-label="Search registrations"/>
@@ -276,13 +278,23 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
 
 
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex justify-center items-center gap-2">
-          <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} variant="secondary" size="sm">上一頁</Button>
-          <span className="px-4 py-2 text-sm text-gray-600">第 {currentPage} / {totalPages} 頁</span>
-          <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} variant="secondary" size="sm">下一頁</Button>
-        </div>
-      )}
+     {totalPages > 1 && (
+  <div className="mt-4 flex justify-center items-center gap-2">
+    <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} variant="secondary" size="sm">
+      {translations.previousPage || "上一頁"}
+    </Button>
+    
+    <span className="px-4 py-2 text-sm text-gray-600">
+      {(translations.pageIndicator || "第 {currentPage} / {totalPages} 頁")
+        .replace('{currentPage}', currentPage)
+        .replace('{totalPages}', totalPages)}
+    </span>
+    
+    <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} variant="secondary" size="sm">
+      {translations.nextPage || "下一頁"}
+    </Button>
+  </div>
+)}
 
       {deleteConfirmId !== null && (
         <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50">
