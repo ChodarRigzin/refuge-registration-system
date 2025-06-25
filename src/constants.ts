@@ -37,6 +37,7 @@ export const initialTranslations: AllTranslations = {
     selectGender: "請選擇性別",
     male: "男",
     female: "女",
+    genderNotProvided: "未提供", 
 
     submitRegistration: "提交登記",
     clearForm: "清除重填",
@@ -133,6 +134,7 @@ export const initialTranslations: AllTranslations = {
     selectGender: "Please select gender",
     male: "Male",
     female: "Female",
+    genderNotProvided: "Not Provided",
     submitRegistration: "Submit Registration",
     clearForm: "Clear Form",
     search: "Search",

@@ -280,7 +280,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
                </th>              
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.name}</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">{translations.gender}</th>
-              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden lg:table-cell">出生年月日</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden lg:table-cell">
+             {translations.dateOfBirth || 'Date of Birth'}
+              </th>              
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.phone}</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">{translations.email}</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.refugeDate}</th>

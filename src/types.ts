@@ -4,7 +4,7 @@
 export interface Refugee {
   id: string; // Firebase 的文件 ID 是 string
   name: string;
-  gender: '男' | '女' | '';
+  gender: '男' | '女' | '未提供';
   nationality: string;
   phone: string;
   address: string;

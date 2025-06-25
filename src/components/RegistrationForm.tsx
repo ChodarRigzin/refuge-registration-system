@@ -8,7 +8,18 @@ import { Select } from './common/Select';
 export const RegistrationForm = () => {
   const context = useContext(AppContext) as AppContextType;
 
-  const getInitialFormDataState = useCallback(() => ({ name: '', gender: '' as '' | '男' | '女', dateOfBirth: '', nationality: '', phone: '', address: '', email: '', refugeDate: new Date().toISOString().split('T')[0], refugePlace: '' }), []);
+  // 更新初始狀態的 gender 類型以包含 '未提供'
+  const getInitialFormDataState = useCallback(() => ({ 
+    name: '', 
+    gender: '' as '' | '男' | '女' | '未提供', 
+    dateOfBirth: '', 
+    nationality: '', 
+    phone: '', 
+    address: '', 
+    email: '', 
+    refugeDate: new Date().toISOString().split('T')[0], 
+    refugePlace: '' 
+  }), []);
 
   const [formData, setFormData] = useState(getInitialFormDataState());
   const [successMessage, setSuccessMessage] = useState('');
@@ -21,7 +32,18 @@ export const RegistrationForm = () => {
   }, [context, getInitialFormDataState]);
 
   if (!context) {
-    return <div className="flex items-center justify-center p-12"><div className="animate-pulse"><div className="h-8 bg-gray-200 rounded w-48 mb-4"></div><div className="space-y-3"><div className="h-10 bg-gray-200 rounded"></div><div className="h-10 bg-gray-200 rounded"></div><div className="h-10 bg-gray-200 rounded"></div></div></div></div>;
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
   
   const { addRefugee, translations } = context;
@@ -32,7 +54,9 @@ export const RegistrationForm = () => {
     if (errorMessage) { setErrorMessage(''); }
   };
 
-  const handleBlur = (fieldName: string) => { setTouchedFields(prev => new Set(prev).add(fieldName)); };
+  const handleBlur = (fieldName: string) => {
+    setTouchedFields(prev => new Set(prev).add(fieldName));
+  };
 
   const validateForm = (): boolean => {
     const requiredFields = ['name', 'gender', 'dateOfBirth', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
@@ -112,67 +136,111 @@ export const RegistrationForm = () => {
         <span className="text-2xl text-[#D4A574]">◈</span>
         {translations.registrationFormTitle}
       </h2>
-      {successMessage && <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 flex items-center animate-fadeIn"><div className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center mr-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div><span className="flex-grow">{successMessage}</span><button onClick={() => setSuccessMessage('')} className="ml-3 text-green-600 hover:text-green-800">✕</button></div>}
-      {errorMessage && <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 flex items-center animate-shakeIcon"><div className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center mr-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></div><span className="flex-grow">{errorMessage}</span><button onClick={() => setErrorMessage('')} className="ml-3 text-red-600 hover:text-red-800">✕</button></div>}
+      
+      {successMessage && (
+        <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 flex items-center animate-fadeIn">
+          <div className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center mr-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
+          <span className="flex-grow">{successMessage}</span>
+          <button onClick={() => setSuccessMessage('')} className="ml-3 text-green-600 hover:text-green-800">✕</button>
+        </div>
+      )}
+      {errorMessage && (
+        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 flex items-center animate-shakeIcon">
+          <div className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center mr-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></div>
+          <span className="flex-grow">{errorMessage}</span>
+          <button onClick={() => setErrorMessage('')} className="ml-3 text-red-600 hover:text-red-800">✕</button>
+        </div>
+      )}
       
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* ----- 基本資料區塊 ----- */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">{translations.subheadingBasicInfo}</h3>
             <div className="grid md:grid-cols-3 gap-4 md:gap-6">
-              <Input label={translations.name} id="name" name="name" value={formData.name} onChange={handleChange} onBlur={() => handleBlur('name')} placeholder={translations.namePlaceholder} isRequired error={getFieldError('name')} disabled={isSubmitting}/>
-              <Select label={translations.gender} id="gender" name="gender" value={formData.gender} onChange={handleChange} onBlur={() => handleBlur('gender')} isRequired error={getFieldError('gender')} disabled={isSubmitting}>
-                <option value="">{translations.selectGender}</option>
-                <option value="男">{translations.male}</option>
-                <option value="女">{translations.female}</option>
-              </Select>
-              <Input 
-                label={translations.dateOfBirth} 
-                id="dateOfBirth" 
-                name="dateOfBirth" 
-                type="date" 
-                value={formData.dateOfBirth} 
-                onChange={handleChange} 
-                onBlur={() => handleBlur('dateOfBirth')} 
-                disabled={isSubmitting} 
-                max={new Date().toISOString().split('T')[0]}
-                isRequired 
-                error={getFieldError('dateOfBirth')}
-              />           
+              
+              <div>
+                <Input label={translations.name} id="name" name="name" value={formData.name} onChange={handleChange} onBlur={() => handleBlur('name')} placeholder={translations.namePlaceholder} isRequired error={getFieldError('name')} disabled={isSubmitting}/>
+                <div className="h-5 mt-1 text-xs text-red-600">{getFieldError('name') || ''}</div>
+              </div>
+
+              <div>
+                <Select label={translations.gender} id="gender" name="gender" value={formData.gender} onChange={handleChange} onBlur={() => handleBlur('gender')} isRequired error={!!getFieldError('gender')} disabled={isSubmitting}>
+                  <option value="">{translations.selectGender}</option>
+                  <option value="男">{translations.male}</option>
+                  <option value="女">{translations.female}</option>
+                  <option value="未提供">{translations.genderNotProvided || '未提供'}</option>
+                </Select>
+                <div className="h-5 mt-1 text-xs text-red-600">{getFieldError('gender') || ''}</div>
+              </div>
+
+              <div>
+                <Input label={translations.dateOfBirth} id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} onBlur={() => handleBlur('dateOfBirth')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]} isRequired error={getFieldError('dateOfBirth')}/>
+                <div className="h-5 mt-1 text-xs text-red-600">{getFieldError('dateOfBirth') || ''}</div>
+              </div>
+
             </div>
           </div>
+
+          {/* ----- 聯絡資料區塊 ----- */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">{translations.subheadingContactInfo}</h3>
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                
                 <div>
                   <Input label={translations.nationality} id="nationality" name="nationality" value={formData.nationality} onChange={handleChange} onBlur={() => handleBlur('nationality')} placeholder={translations.nationalityPlaceholder} isRequired error={getFieldError('nationality')} disabled={isSubmitting}/>
-                  <p className="mt-1 text-xs text-gray-500">{translations.nationalityHint}</p>
+                  <div className="h-5 mt-1 text-xs text-gray-500">{getFieldError('nationality') || translations.nationalityHint}</div>
                 </div>
+
                 <div>
                   <Input label={translations.phone} id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} onBlur={() => handleBlur('phone')} placeholder={translations.phonePlaceholder} isRequired error={getFieldError('phone')} disabled={isSubmitting}/>
-                  <p className="mt-1 text-xs text-gray-500">{translations.phoneHint}</p>
+                  <div className="h-5 mt-1 text-xs text-gray-500">{getFieldError('phone') || translations.phoneHint}</div>
                 </div>
               </div>
-              <Input label={translations.address} id="address" name="address" value={formData.address} onChange={handleChange} onBlur={() => handleBlur('address')} placeholder={translations.addressPlaceholder} disabled={isSubmitting}/>
-              <Input label={translations.email} id="email" name="email" type="email" value={formData.email} onChange={handleChange} onBlur={() => handleBlur('email')} placeholder={translations.emailPlaceholder} isRequired error={getFieldError('email')} disabled={isSubmitting}/>
+              
+              <div>
+                <Input label={translations.address} id="address" name="address" value={formData.address} onChange={handleChange} onBlur={() => handleBlur('address')} placeholder={translations.addressPlaceholder} disabled={isSubmitting}/>
+                <div className="h-5 mt-1"></div>
+              </div>
+              
+              <div>
+                <Input label={translations.email} id="email" name="email" type="email" value={formData.email} onChange={handleChange} onBlur={() => handleBlur('email')} placeholder={translations.emailPlaceholder} isRequired error={getFieldError('email')} disabled={isSubmitting}/>
+                <div className="h-5 mt-1 text-xs text-red-600">{getFieldError('email') || ''}</div>
+              </div>
+
             </div>
           </div>
+          
+          {/* ----- 皈依資料區塊 ----- */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">{translations.subheadingRefugeInfo}</h3>
             <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-              <Input label={translations.refugeDate} id="refugeDate" name="refugeDate" type="date" value={formData.refugeDate} onChange={handleChange} onBlur={() => handleBlur('refugeDate')} isRequired error={getFieldError('refugeDate')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]}/>
-              <Input label={translations.refugePlace} id="refugePlace" name="refugePlace" value={formData.refugePlace} onChange={handleChange} onBlur={() => handleBlur('refugePlace')} placeholder={translations.refugePlacePlaceholder} isRequired error={getFieldError('refugePlace')} disabled={isSubmitting}/>
+              
+              <div>
+                <Input label={translations.refugeDate} id="refugeDate" name="refugeDate" type="date" value={formData.refugeDate} onChange={handleChange} onBlur={() => handleBlur('refugeDate')} isRequired error={getFieldError('refugeDate')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]}/>
+                <div className="h-5 mt-1 text-xs text-red-600">{getFieldError('refugeDate') || ''}</div>
+              </div>
+              
+              <div>
+                <Input label={translations.refugePlace} id="refugePlace" name="refugePlace" value={formData.refugePlace} onChange={handleChange} onBlur={() => handleBlur('refugePlace')} placeholder={translations.refugePlacePlaceholder} isRequired error={getFieldError('refugePlace')} disabled={isSubmitting}/>
+                <div className="h-5 mt-1 text-xs text-red-600">{getFieldError('refugePlace') || ''}</div>
+              </div>
+
             </div>
           </div>
+
+          {/* ----- 按鈕區塊 ----- */}
           <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button type="submit" variant="primary" size="lg" disabled={isSubmitting} className={`${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''} flex-1 sm:flex-initial`}>
-              {isSubmitting ? "處理中..." : translations.submitRegistration}
+              {isSubmitting ? (translations.submitting || "處理中...") : translations.submitRegistration}
             </Button>
             <Button type="button" onClick={handleReset} variant="secondary" size="lg" disabled={isSubmitting} className="flex-1 sm:flex-initial">{translations.clearForm}</Button>
           </div>
         </form>
       </div>
+      
       <div className="mt-4 text-sm text-gray-600 text-center">
         <span className="text-red-500">*</span> {translations.requiredFieldsNote}
       </div>
