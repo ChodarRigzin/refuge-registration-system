@@ -8,7 +8,6 @@ import { Select } from './common/Select';
 export const RegistrationForm = () => {
   const context = useContext(AppContext) as AppContextType;
 
-  // (getInitialFormDataState 和其他邏輯保持不變...)
   const getInitialFormDataState = useCallback(() => ({ name: '', gender: '' as '' | '男' | '女', dateOfBirth: '', nationality: '', phone: '', address: '', email: '', refugeDate: new Date().toISOString().split('T')[0], refugePlace: '' }), []);
 
   const [formData, setFormData] = useState(getInitialFormDataState());
@@ -36,7 +35,7 @@ export const RegistrationForm = () => {
   const handleBlur = (fieldName: string) => { setTouchedFields(prev => new Set(prev).add(fieldName)); };
 
   const validateForm = (): boolean => {
-    const requiredFields = ['name', 'gender', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
+    const requiredFields = ['name', 'gender', 'dateOfBirth', 'nationality', 'phone', 'email', 'refugeDate', 'refugePlace'];
     for (const field of requiredFields) {
       if (!formData[field as keyof typeof formData]) {
         setErrorMessage(translations.fillAllRequired);
@@ -89,9 +88,13 @@ export const RegistrationForm = () => {
   const getFieldError = (fieldName: string): string | null => {
     if (!touchedFields.has(fieldName)) return null;
     const value = formData[fieldName as keyof typeof formData] as string;
-    if (fieldName !== 'address' && !value) {
+    
+    // 檢查除了 'address' 以外的必填欄位是否為空
+    const isRequiredAndEmpty = (fieldName !== 'address' && !value);
+    if (isRequiredAndEmpty) {
       return translations.fieldRequired;
     }
+    
     if (fieldName === 'email' && value) {
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(value)) return translations.invalidEmail;
@@ -123,7 +126,19 @@ export const RegistrationForm = () => {
                 <option value="男">{translations.male}</option>
                 <option value="女">{translations.female}</option>
               </Select>
-              <Input label={translations.dateOfBirth} id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} onBlur={() => handleBlur('dateOfBirth')} disabled={isSubmitting} max={new Date().toISOString().split('T')[0]}/>
+              <Input 
+                label={translations.dateOfBirth} 
+                id="dateOfBirth" 
+                name="dateOfBirth" 
+                type="date" 
+                value={formData.dateOfBirth} 
+                onChange={handleChange} 
+                onBlur={() => handleBlur('dateOfBirth')} 
+                disabled={isSubmitting} 
+                max={new Date().toISOString().split('T')[0]}
+                isRequired 
+                error={getFieldError('dateOfBirth')}
+              />           
             </div>
           </div>
           <div>

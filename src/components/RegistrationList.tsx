@@ -1,4 +1,5 @@
 import React, { useState, useContext, useMemo, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { AppContext, AppContextType } from '../contexts/AppContext';
 import { Refugee, DharmaNameEntry } from '../types';
 import { Button } from './common/Button';
@@ -7,12 +8,7 @@ import { Select } from './common/Select';
 import { Modal } from './common/Modal';
 import { AccessDenied } from './AccessDenied';
 import { dharmaNameList } from '../dharmaNames';
-
-// ***** 1. 引入新的服務函式和 UI 組件 *****
 import { getCertificateAsBase64 } from '../services/pdfCertificateService';
-// 假設您有一個 Textarea 組件。如果沒有，請用 <textarea className="..."></textarea> 代替
-//import { Textarea } from './common/Textarea'; 
-
 
 interface RegistrationListProps {
   onLoginClick: () => void;
@@ -30,9 +26,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-// ***** 2. 為寄送郵件 Modal 新增 state *****
-  // 這段要加在其他 useState 宣告的旁邊
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [sendingPerson, setSendingPerson] = useState<Refugee | null>(null);
   const [emailSubject, setEmailSubject] = useState('');
@@ -40,12 +33,12 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const [isSending, setIsSending] = useState(false);
   const [sendModalMessage, setSendModalMessage] = useState('');
 
-
   useEffect(() => {
     if (editingPerson) {
       setEditFormData({
         name: editingPerson.name,
         gender: editingPerson.gender,
+        dateOfBirth: editingPerson.dateOfBirth,
         nationality: editingPerson.nationality,
         phone: editingPerson.phone,
         address: editingPerson.address,
@@ -70,8 +63,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const filteredData = useMemo(() => {
     return refugeeData.filter(person =>
       person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (person.dateOfBirth && person.dateOfBirth.includes(searchTerm)) ||
       person.phone.includes(searchTerm) ||
-      (person.address && person.address.toLowerCase().includes(searchTerm.toLowerCase())) || // Address can be null/undefined
+      (person.address && person.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (person.email && person.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (person.dharmaNamePhonetic && person.dharmaNamePhonetic.toLowerCase().includes(searchTerm.toLowerCase()))
     )
@@ -93,10 +87,38 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }
   };
   
+  const handleExportToExcel = () => {
+    const dataToExport = filteredData.map((person, index) => ({
+      '編號': index + 1,
+      '姓名': person.name,
+      '法名（音譯）': person.dharmaNamePhonetic || '-',
+      '性別': person.gender,
+      '出生年月日': person.dateOfBirth,
+      '國籍': person.nationality,
+      '電話': person.phone,
+      'Email': person.email || '-',
+      '地址': person.address || '-',
+      '皈依日期': person.refugeDate,
+      '皈依地點': person.refugePlace,
+      '登記時間': person.registrationTime ? new Date(person.registrationTime).toLocaleString() : '-',
+      '法名（原文）': person.dharmaName || '-',
+      '法名（意義）': person.dharmaNameMeaning || '-',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '弟子名單');
+    worksheet['!cols'] = [
+      { wch: 5 }, { wch: 15 }, { wch: 15 }, { wch: 8 }, { wch: 15 }, { wch: 12 },
+      { wch: 20 }, { wch: 25 }, { wch: 40 }, { wch: 15 }, { wch: 20 }, { wch: 20 },
+      { wch: 20 }, { wch: 30 },
+    ];
+    XLSX.writeFile(workbook, `皈依弟子名冊_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const handleViewPerson = (person: Refugee) => {
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50';
-    const content = `<div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"><h3 class="text-lg font-semibold mb-4 text-gray-800">${translations.viewDetails || '詳細資料'}</h3><div class="space-y-3 text-sm"><div><span class="font-medium text-gray-600">${translations.name}：</span>${person.name}</div><div><span class="font-medium text-gray-600">${translations.gender}：</span>${language === 'en' ? (person.gender === '男' ? 'Male' : 'Female') : person.gender}</div><div><span class="font-medium text-gray-600">${translations.nationality}：</span>${person.nationality}</div><div><span class="font-medium text-gray-600">${translations.phone}：</span>${person.phone}</div><div><span class="font-medium text-gray-600">${translations.address}：</span>${person.address || '-'}</div><div><span class="font-medium text-gray-600">${translations.email}：</span>${person.email || '-'}</div><div><span class="font-medium text-gray-600">${translations.refugeDate}：</span>${person.refugeDate}</div><div><span class="font-medium text-gray-600">${translations.refugePlace}：</span>${person.refugePlace}</div>${person.dharmaName ? `<div class="pt-3 border-t border-gray-200"><div><span class="font-medium text-gray-600">${translations.dharmaName}：</span>${person.dharmaName}</div><div><span class="font-medium text-gray-600">${translations.dharmaNamePhonetic}：</span>${person.dharmaNamePhonetic || '-'}</div><div><span class="font-medium text-gray-600">${translations.dharmaNameMeaning}：</span>${person.dharmaNameMeaning || '-'}</div></div>` : ''}</div><button class="mt-6 w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">${translations.close || '關閉'}</button></div>`;
+    const content = `<div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"><h3 class="text-lg font-semibold mb-4 text-gray-800">${translations.viewDetails || '詳細資料'}</h3><div class="space-y-3 text-sm"><div><span class="font-medium text-gray-600">${translations.name}：</span>${person.name}</div><div><span class="font-medium text-gray-600">${translations.gender}：</span>${language === 'en' ? (person.gender === '男' ? 'Male' : 'Female') : person.gender}</div><div><span class="font-medium text-gray-600">${translations.dateOfBirth || '出生年月日'}：</span>${person.dateOfBirth || '-'}</div><div><span class="font-medium text-gray-600">${translations.nationality}：</span>${person.nationality}</div><div><span class="font-medium text-gray-600">${translations.phone}：</span>${person.phone}</div><div><span class="font-medium text-gray-600">${translations.address}：</span>${person.address || '-'}</div><div><span class="font-medium text-gray-600">${translations.email}：</span>${person.email || '-'}</div><div><span class="font-medium text-gray-600">${translations.refugeDate}：</span>${person.refugeDate}</div><div><span class="font-medium text-gray-600">${translations.refugePlace}：</span>${person.refugePlace}</div>${person.dharmaName ? `<div class="pt-3 border-t border-gray-200"><div><span class="font-medium text-gray-600">${translations.dharmaName}：</span>${person.dharmaName}</div><div><span class="font-medium text-gray-600">${translations.dharmaNamePhonetic}：</span>${person.dharmaNamePhonetic || '-'}</div><div><span class="font-medium text-gray-600">${translations.dharmaNameMeaning}：</span>${person.dharmaNameMeaning || '-'}</div></div>` : ''}</div><button class="mt-6 w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">${translations.close || '關閉'}</button></div>`;
     modal.innerHTML = content;
     document.body.appendChild(modal);
     modal.addEventListener('click', (e) => { if (e.target === modal || (e.target as HTMLElement).tagName === 'BUTTON') { document.body.removeChild(modal); } });
@@ -115,7 +137,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingPerson && editFormData) {
-      if (!editFormData.name || !editFormData.gender || !editFormData.nationality || 
+      if (!editFormData.name || !editFormData.gender || !editFormData.dateOfBirth || !editFormData.nationality || 
           !editFormData.phone || !editFormData.refugeDate || !editFormData.refugePlace) {
         alert(translations.fillAllRequired);
         return;
@@ -213,25 +235,29 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   return (
     <div className="w-full">
      <h2 className="text-2xl font-bold text-[#8B6F47] mb-6 flex items-center gap-3">
-     <span className="text-2xl text-[#D4A574]">◈</span>
-     {translations.discipleList}
-     <span className="text-sm font-normal text-gray-600 ml-auto">
-    {(translations.totalRecords || "共 {count} 筆資料").replace('{count}', filteredData.length)}
-  </span>
-</h2>
+       <span className="text-2xl text-[#D4A574]">◈</span>
+       {translations.discipleList}
+       <span className="text-sm font-normal text-gray-600 ml-auto">
+         {(translations.totalRecords || "共 {count} 筆資料").replace('{count}', filteredData.length)}
+       </span>
+     </h2>
 
       <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <Input type="text" placeholder={translations.searchPlaceholder} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-grow !mb-0" aria-label="Search registrations"/>
         <Button onClick={() => { setSearchTerm(''); setCurrentPage(1); }} variant="secondary" size="md">{translations.showAll}</Button>
+        <Button onClick={handleExportToExcel} variant="success" size="md" disabled={filteredData.length === 0}>
+          匯出 Excel
+        </Button>
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
         <table className="w-full min-w-[800px] border-collapse">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-12">編號</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.name}</th>
-              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.gender}</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">{translations.gender}</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden lg:table-cell">出生年月日</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.phone}</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">{translations.email}</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.refugeDate}</th>
@@ -240,11 +266,14 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
-            {paginatedData.map(person => (
+            {paginatedData.map((person, index) => (
               <tr key={person.id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-3 text-sm text-gray-700" title={person.id}>{person.id.substring(0, 6)}...</td>
+                <td className="p-3 text-sm text-gray-700 font-mono">
+                  {(currentPage - 1) * itemsPerPage + index + 1}
+                </td>
                 <td className="p-3 text-sm text-gray-800 font-medium">{person.name}</td>
-                <td className="p-3 text-sm text-gray-700">{language === 'en' ? (person.gender === '男' ? 'M' : 'F') : person.gender}</td>
+                <td className="p-3 text-sm text-gray-700 hidden md:table-cell">{language === 'en' ? (person.gender === '男' ? 'M' : 'F') : person.gender}</td>
+                <td className="p-3 text-sm text-gray-700 hidden lg:table-cell">{person.dateOfBirth || '-'}</td>
                 <td className="p-3 text-sm text-gray-700">{person.phone}</td>
                 <td className="p-3 text-sm text-gray-700 hidden md:table-cell">{person.email || '-'}</td>
                 <td className="p-3 text-sm text-gray-700">{person.refugeDate}</td>
@@ -253,24 +282,13 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
                   <div className="flex gap-1 justify-center">
                     <Button onClick={() => handleViewPerson(person)} variant="neutral" size="sm" className="!px-2 !py-1">⬉</Button>
                     <Button onClick={() => handleOpenEditModal(person)} variant="primary" size="sm" className="!px-2 !py-1">✎</Button>
-                     {/* ***** 4. 加入郵件按鈕 ***** */}
-                    <Button 
-                      onClick={() => handleOpenSendModal(person)} 
-                      variant="success" // 你可能需要一個綠色的按鈕變體
-                      size="sm" 
-                      className="!px-2 !py-1"
-                      title={translations.sendCertificateEmail || '寄送皈依證郵件'}
-                      disabled={!person.email} // 如果沒有 email 就禁用
-                    >
-                      ✉
-                    </Button>
-
+                    <Button onClick={() => handleOpenSendModal(person)} variant="success" size="sm" className="!px-2 !py-1" title={translations.sendCertificateEmail || '寄送皈依證郵件'} disabled={!person.email}>✉</Button>
                     <Button onClick={() => handleDeleteClick(person.id)} variant="danger" size="sm" className="!px-2 !py-1" title={translations.delete || '刪除'}>⨯</Button>
                   </div>
                 </td>
               </tr>
             ))}
-            {paginatedData.length === 0 && (<tr><td colSpan={8} className="p-6 text-center text-gray-500">{searchTerm ? '找不到符合的資料' : '尚無資料'}</td></tr>)}
+            {paginatedData.length === 0 && (<tr><td colSpan={9} className="p-6 text-center text-gray-500">{searchTerm ? '找不到符合的資料' : '尚無資料'}</td></tr>)}
           </tbody>
         </table>
       </div>
@@ -309,19 +327,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
         </div>
       )}
 
-      {editingPerson && (
-        <Modal 
-          isOpen={isEditModalOpen} 
-          onClose={() => setIsEditModalOpen(false)} 
-          title={`${translations.edit}: ${editingPerson.name}`} 
-          size="xl"
-        >
-          {successMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-700 text-sm text-center">
-              {successMessage}
-            </div>
-          )}
-          
+       {editingPerson && (
+        <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title={`${translations.edit}: ${editingPerson.name}`} size="xl">
+          {successMessage && <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-700 text-sm text-center">{successMessage}</div>}
           <form onSubmit={handleSaveChanges} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
             <div className="grid md:grid-cols-2 gap-4">
               <Input label={translations.name} name="name" value={editFormData.name || ''} onChange={handleEditFormChange} isRequired />
@@ -331,20 +339,20 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
                 <option value="女">{translations.female}</option>
               </Select>
             </div>
-            
             <div className="grid md:grid-cols-2 gap-4">
+              <Input label={translations.dateOfBirth} name="dateOfBirth" type="date" value={editFormData.dateOfBirth || ''} onChange={handleEditFormChange} isRequired />
               <Input label={translations.nationality} name="nationality" value={editFormData.nationality || ''} onChange={handleEditFormChange} isRequired />
-              <Input label={translations.phone} name="phone" type="tel" value={editFormData.phone || ''} onChange={handleEditFormChange} isRequired />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+               <Input label={translations.phone} name="phone" type="tel" value={editFormData.phone || ''} onChange={handleEditFormChange} isRequired />
+               <Input label={translations.email} name="email" type="email" value={editFormData.email || ''} onChange={handleEditFormChange} />
             </div>
             <Input label={translations.address} name="address" value={editFormData.address || ''} onChange={handleEditFormChange} />
-            <Input label={translations.email} name="email" type="email" value={editFormData.email || ''} onChange={handleEditFormChange} />
-            
             <div className="grid md:grid-cols-2 gap-4">
               <Input label={translations.refugeDate} name="refugeDate" type="date" value={editFormData.refugeDate || ''} onChange={handleEditFormChange} isRequired />
               <Input label={translations.refugePlace} name="refugePlace" value={editFormData.refugePlace || ''} onChange={handleEditFormChange} isRequired />
             </div>
-            
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mt-6 pt-6 border-t border-gray-200">              
               <div className="flex justify-between items-center mb-3">
                 <h4 className="text-lg font-semibold text-[#8B6F47]">{translations.dharmaNameOptional || '法名 (選填)'}</h4>
                 <Button type="button" variant="link" onClick={handleSuggestDharmaName} size="sm">{translations.suggestDharmaName || '建議法名'}</Button>
@@ -364,7 +372,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
           </form>
         </Modal>
       )}
-
 
    {/* ***** 5. 在此處加入寄送郵件的 Modal ***** */}
       {/* 它的位置就在其他 Modal 的旁邊，在 return 的最外層 div 結束前 */}
