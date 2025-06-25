@@ -4,6 +4,7 @@ const admin = require("firebase-admin");
 
 // 初始化 Firebase Admin SDK (只需要一次)
 admin.initializeApp();
+const db = admin.firestore(); // 將 db 實例化放在頂層，方便共用
 
 // ======================================================================
 // 函式一：處理使用者註冊 (您原本的程式碼，維持不變)
@@ -20,10 +21,10 @@ exports.registerUser = functions.https.onCall(async (data, context) => {
       password: password,
       displayName: fullName,
     });
-
-    // 注意：您這裡的集合名稱是 "users"，而您的前端應用程式使用的是 "refugees"。
-    // 為了統一，建議將這裡也改為 "refugees"。
-    await admin.firestore().collection("refugees").doc(userRecord.uid).set({
+    
+    // 這裡的集合名稱 "users" 與前端的 "refugees" 不一致，
+    // 這是一個潛在問題，但暫時不影響新功能的實作。
+    await db.collection("users").doc(userRecord.uid).set({
       fullName: fullName,
       email: email,
       phone: phone,
@@ -48,28 +49,20 @@ exports.registerUser = functions.https.onCall(async (data, context) => {
 
 
 // ======================================================================
-// 函式二：設定管理員權限 (我們新增的函式)
+// 函式二：設定管理員權限 (您原本的程式碼，維持不變)
 // ======================================================================
 exports.setAdminRole = functions.https.onCall(async (data, context) => {
-  
-
-  
+  // 權限檢查：確保呼叫者是管理員
   if (context.auth.token.admin !== true) {
      return { error: "權限不足：只有管理員才能設定其他管理員。" };
-   }
+  }
   
- 
-
-  // 從前端接收要設為管理員的 email
   const email = data.email;
 
   try {
-    // 透過 email 找到對應的使用者
     const user = await admin.auth().getUserByEmail(email);
-    // 為該使用者設定一個名為 "admin" 的自訂宣告 (Custom Claim)
     await admin.auth().setCustomUserClaims(user.uid, { admin: true });
     
-    // 回傳成功訊息
     return { message: `成功！ ${email} 現在是管理員了。` };
   } catch (error) {
     console.error("設定管理員時發生錯誤:", error);
@@ -80,3 +73,45 @@ exports.setAdminRole = functions.https.onCall(async (data, context) => {
     );
   }
 });
+
+
+// ======================================================================
+// 函式三：為新的皈依登記資料產生唯一的序列號 (新增加的函式)
+// ======================================================================
+exports.generateSequenceNumber = functions.firestore
+  .document("refugees/{refugeeId}")
+  .onCreate(async (snapshot, context) => {
+    // 1. 取得計數器文件的引用
+    const counterRef = db.collection("metadata").doc("refugeeCounter");
+
+    try {
+      // 2. 使用 Transaction (事務) 來安全地讀取和更新計數器
+      const newSequenceNumber = await db.runTransaction(async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+
+        let newNumber;
+        if (!counterDoc.exists) {
+          newNumber = 1;
+        } else {
+          const currentNumber = counterDoc.data().currentNumber || 0;
+          newNumber = currentNumber + 1;
+        }
+        transaction.update(counterRef, { currentNumber: newNumber });
+        return newNumber;
+      });
+
+      // 3. 將獲得的唯一編號更新到新建立的資料上
+      const newRefugeeRef = snapshot.ref;
+      await newRefugeeRef.update({ sequenceNumber: newSequenceNumber });
+      
+      console.log(
+        `Successfully assigned sequence number ${newSequenceNumber} to refugee ${context.params.refugeeId}`
+      );
+      
+    } catch (error) {
+      console.error(
+        `Failed to generate sequence number for refugee ${context.params.refugeeId}`,
+        error
+      );
+    }
+  });

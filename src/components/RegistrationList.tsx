@@ -15,8 +15,10 @@ interface RegistrationListProps {
 }
 
 export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick }) => {
+  // 1. 統一在頂層處理 Context
   const context = useContext(AppContext) as AppContextType;
   
+  // State 的宣告
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Refugee | null>(null);
@@ -33,6 +35,20 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const [isSending, setIsSending] = useState(false);
   const [sendModalMessage, setSendModalMessage] = useState('');
 
+  // 2. 處理 Context 不存在的情況
+  if (!context) {
+    return <div className="p-6 text-center">Loading list...</div>;
+  }
+
+  // 3. 解構所有需要的變數和函式
+  const { refugeeData, deleteRefugee, updateRefugee, isAdmin, translations, language } = context;
+
+  // 4. 權限檢查
+  if (!isAdmin) {
+    return <AccessDenied messageKey="adminOnlyList" onLoginClick={onLoginClick} />;
+  }
+
+  // useEffect for editing form
   useEffect(() => {
     if (editingPerson) {
       setEditFormData({
@@ -52,30 +68,34 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }
     setSuggestionMessage(''); 
   }, [editingPerson]);
-
-  if (!context) return <div className="p-6 text-center">Loading list...</div>;
-  const { refugeeData, deleteRefugee, updateRefugee, isAdmin, translations, language } = context;
-
-  if (!isAdmin) {
-    return <AccessDenied messageKey="adminOnlyList" onLoginClick={onLoginClick} />;
-  }
-
+  
+  // 5. 使用修正後的、健壯的搜尋邏輯
   const filteredData = useMemo(() => {
-    return refugeeData.filter(person =>
-      person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (person.dateOfBirth && person.dateOfBirth.includes(searchTerm)) ||
-      person.phone.includes(searchTerm) ||
-      (person.address && person.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (person.email && person.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (person.dharmaNamePhonetic && person.dharmaNamePhonetic.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-    .sort((a, b) => {
-        const timeA = a.registrationTime ? new Date(a.registrationTime).getTime() : 0;
-        const timeB = b.registrationTime ? new Date(b.registrationTime).getTime() : 0;
-        return timeB - timeA;
-    });
+    if (!searchTerm.trim()) {
+      // 直接回傳已排序的資料，不進行 filter
+      return [...refugeeData].sort((a, b) => (b.sequenceNumber || 0) - (a.sequenceNumber || 0));
+    }
+
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+
+    return refugeeData.filter(person => {
+      const searchableFields = [
+        person.name,
+        person.dateOfBirth,
+        person.phone,
+        person.address,
+        person.email,
+        person.dharmaNamePhonetic,
+        person.sequenceNumber ? String(person.sequenceNumber) : null, 
+      ];
+
+      return searchableFields.some(field => 
+        field && typeof field === 'string' && field.toLowerCase().includes(lowercasedSearchTerm)
+      );
+    }).sort((a, b) => (b.sequenceNumber || 0) - (a.sequenceNumber || 0)); // 篩選後也排序
   }, [refugeeData, searchTerm]);
 
+  // 分頁邏輯
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -89,7 +109,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   
   const handleExportToExcel = () => {
     const dataToExport = filteredData.map((person, index) => ({
-      '編號': index + 1,
+      '編號': person.sequenceNumber || '無', // 使用永久編號
       '姓名': person.name,
       '法名（音譯）': person.dharmaNamePhonetic || '-',
       '性別': person.gender,
@@ -231,6 +251,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }
   };
 
+  console.log("Current search term:", searchTerm); 
 
   return (
     <div className="w-full">
@@ -246,15 +267,17 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
         <Input type="text" placeholder={translations.searchPlaceholder} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-grow !mb-0" aria-label="Search registrations"/>
         <Button onClick={() => { setSearchTerm(''); setCurrentPage(1); }} variant="secondary" size="md">{translations.showAll}</Button>
         <Button onClick={handleExportToExcel} variant="success" size="md" disabled={filteredData.length === 0}>
-          匯出 Excel
-        </Button>
-      </div>
+       {translations.exportToExcel || '匯出 Excel'} 
+        </Button>     
+         </div>
 
       <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
         <table className="w-full min-w-[800px] border-collapse">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-12">編號</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-12">
+              {translations.sequenceNumber || '編號'} 
+               </th>              
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">{translations.name}</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden md:table-cell">{translations.gender}</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase hidden lg:table-cell">出生年月日</th>
@@ -269,8 +292,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
             {paginatedData.map((person, index) => (
               <tr key={person.id} className="hover:bg-gray-50 transition-colors">
                 <td className="p-3 text-sm text-gray-700 font-mono">
-                  {(currentPage - 1) * itemsPerPage + index + 1}
-                </td>
+                {/* 顯示從 Firebase 來的永久編號 */}
+                {person.sequenceNumber || 'N/A'}
+              </td>
                 <td className="p-3 text-sm text-gray-800 font-medium">{person.name}</td>
                 <td className="p-3 text-sm text-gray-700 hidden md:table-cell">{language === 'en' ? (person.gender === '男' ? 'M' : 'F') : person.gender}</td>
                 <td className="p-3 text-sm text-gray-700 hidden lg:table-cell">{person.dateOfBirth || '-'}</td>

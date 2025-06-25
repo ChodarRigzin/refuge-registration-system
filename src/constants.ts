@@ -12,7 +12,7 @@ export const initialTranslations: AllTranslations = {
     organizationName: "噶陀仁珍千寶佛學會",
     registrationFormTitle: "皈依登記表",
     discipleList: "皈依名單",
-    totalRecords: "共 {count} 筆資料", // <--- 在這裡新增
+    totalRecords: "共 {count} 筆資料",
     certificateGenTitleHtmlPrint: "皈依證書",
     
     // --- 使用者狀態 ---
@@ -42,16 +42,18 @@ export const initialTranslations: AllTranslations = {
     clearForm: "清除重填",
     search: "搜尋",
     showAll: "顯示全部",
+    exportToExcel: "匯出 Excel", // <--- 新增
     view: "查看",
     edit: "編輯",
     delete: "刪除",
     saveChanges: "儲存變更",
     cancel: "取消",
-    previousPage: "上一頁", // <--- 新增
-    nextPage: "下一頁",     // <--- 新增
-    pageIndicator: "第 {currentPage} / {totalPages} 頁", // <--- 新增
+    previousPage: "上一頁",
+    nextPage: "下一頁",
+    pageIndicator: "第 {currentPage} / {totalPages} 頁",
     login: "登入",
     id: "ID",
+    sequenceNumber: "編號", // <--- 新增 (永久編號)
     actions: "操作",
 
     // --- 表單子標題 ---
@@ -98,7 +100,7 @@ export const initialTranslations: AllTranslations = {
     dharmaNamePlaceholder: "請輸入法名 (藏文原文)",
     dharmaNamePhoneticPlaceholder: "請輸入法名音譯 (中文)",
     dharmaNameMeaningPlaceholder: "請輸入法名譯意",
-    searchPlaceholder: "搜尋姓名、電話或地址...",
+    searchPlaceholder: "搜尋姓名、電話、出生年月日...", // <--- 修改
   },
   en: {
     // --- System & Navigation ---
@@ -106,7 +108,7 @@ export const initialTranslations: AllTranslations = {
     organizationName: "Kathog Rigzin Chenpo Dharma Association",
     registrationFormTitle: "Refuge Registration Form",
     discipleList: "Refugee List",
-    totalRecords: "Total {count} records", // <--- Add this line
+    totalRecords: "Total {count} records",
     certificateGenTitleHtmlPrint: "Certificate Preview & Print",
 
     // --- User Status ---
@@ -135,16 +137,18 @@ export const initialTranslations: AllTranslations = {
     clearForm: "Clear Form",
     search: "Search",
     showAll: "Show All",
+    exportToExcel: "Export to Excel", // <--- Add
     view: "View",
     edit: "Edit",
     delete: "Delete",
     saveChanges: "Save Changes",
     cancel: "Cancel",
-    previousPage: "Previous", // <--- Add
-    nextPage: "Next",       // <--- Add
-    pageIndicator: "Page {currentPage} of {totalPages}", // <--- Add
+    previousPage: "Previous",
+    nextPage: "Next",
+    pageIndicator: "Page {currentPage} of {totalPages}",
     login: "Login",
     id: "ID",
+    sequenceNumber: "No.", // <--- Add (for sequence number)
     actions: "Actions",
 
     // --- Form Subheadings ---
@@ -191,6 +195,6 @@ export const initialTranslations: AllTranslations = {
     dharmaNamePlaceholder: "Enter Dharma Name (Tibetan)",
     dharmaNamePhoneticPlaceholder: "Enter Phonetic Dharma Name (Chinese)",
     dharmaNameMeaningPlaceholder: "Enter Meaning of Dharma Name",
-    searchPlaceholder: "Search by name, phone, or address...",
+    searchPlaceholder: "Search by name, phone, or date of birth...", // <--- Modified
   },
 };
