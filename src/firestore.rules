@@ -1,0 +1,34 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 輔助函式：檢查當前登入者是否為管理員
+    // 它會去 'users' 集合中尋找對應 UID 的文件，並檢查 isAdmin 欄位
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // --- “registrations” 集合的規則 (儲存報名資料) ---
+    match /registrations/{registrationId} {
+      
+      // 建立(Create): 任何人都可以提交報名表 (公開功能)
+      allow create: if true;
+
+      // 讀取(Read), 更新(Update), 刪除(Delete): 只有管理員可以操作
+      allow read, update, delete: if isAdmin();
+    }
+
+    // --- “users” 集合的規則 (儲存角色權限) ---
+    match /users/{userId} {
+    
+      // 讀取(Read): 登入者只能讀取自己的使用者資料
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // 寫入(Write): 禁止任何人從前端 App 寫入，以防使用者把自己變成管理員
+      // 管理員必須由您從 Firebase 後台手動設定
+      allow write: if false;
+    }
+  }
+}

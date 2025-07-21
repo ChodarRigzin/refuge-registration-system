@@ -154,11 +154,13 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
   };
 
-  const handleSaveChanges = async (e: React.FormEvent) => {
+
+const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingPerson && editFormData) {
-      if (!editFormData.name || !editFormData.gender || !editFormData.dateOfBirth || !editFormData.nationality || 
-          !editFormData.phone || !editFormData.refugeDate || !editFormData.refugePlace) {
+      // ----- 修改 1：更新此處的必填欄位檢查 -----
+      if (!editFormData.name || !editFormData.refugeDate || !editFormData.refugePlace) {
+        // 只檢查姓名、皈依日期、皈依地點
         alert(translations.fillAllRequired);
         return;
       }
@@ -170,8 +172,7 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
         setSuccessMessage('');
       }, 1500);
     }
-  };
-  
+};
   const handleSuggestDharmaName = () => {
     if (!refugeeData) {
       setSuggestionMessage("資料尚未載入，無法建議法名。");
@@ -366,16 +367,16 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
               </Select>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
-              <Input label={translations.dateOfBirth} name="dateOfBirth" type="date" value={editFormData.dateOfBirth || ''} onChange={handleEditFormChange} isRequired />
-              <Input label={translations.nationality} name="nationality" value={editFormData.nationality || ''} onChange={handleEditFormChange} isRequired />
+              <Input label={translations.dateOfBirth} name="dateOfBirth" type="date" value={editFormData.dateOfBirth || ''} onChange={handleEditFormChange}  />
+              <Input label={translations.nationality} name="nationality" value={editFormData.nationality || ''} onChange={handleEditFormChange}  />
             </div>
             <div className="grid md:grid-cols-2 gap-4">
-               <Input label={translations.phone} name="phone" type="tel" value={editFormData.phone || ''} onChange={handleEditFormChange} isRequired />
+               <Input label={translations.phone} name="phone" type="tel" value={editFormData.phone || ''} onChange={handleEditFormChange}  />
                <Input label={translations.email} name="email" type="email" value={editFormData.email || ''} onChange={handleEditFormChange} />
             </div>
             <Input label={translations.address} name="address" value={editFormData.address || ''} onChange={handleEditFormChange} />
             <div className="grid md:grid-cols-2 gap-4">
-              <Input label={translations.refugeDate} name="refugeDate" type="date" value={editFormData.refugeDate || ''} onChange={handleEditFormChange} isRequired />
+               <Input label={translations.refugeDate} name="refugeDate" type="text" value={editFormData.refugeDate || ''} onChange={handleEditFormChange} placeholder="例如：2024-09-01 或 2024年9月" isRequired />
               <Input label={translations.refugePlace} name="refugePlace" value={editFormData.refugePlace || ''} onChange={handleEditFormChange} isRequired />
             </div>
             <div className="mt-6 pt-6 border-t border-gray-200">              
