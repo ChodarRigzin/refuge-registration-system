@@ -17,7 +17,6 @@ interface RegistrationListProps {
 export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick }) => {
   const context = useContext(AppContext) as AppContextType;
   
-  // State 的宣告
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Refugee | null>(null);
@@ -34,20 +33,16 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const [isSending, setIsSending] = useState(false);
   const [sendModalMessage, setSendModalMessage] = useState('');
 
-  // 處理 Context 不存在的情況
   if (!context) {
     return <div className="p-6 text-center">Loading list...</div>;
   }
 
-  // 解構所有需要的變數和函式
   const { refugeeData, deleteRefugee, updateRefugee, isAdmin, translations, language } = context;
 
-  // 權限檢查
   if (!isAdmin) {
     return <AccessDenied messageKey="adminOnlyList" onLoginClick={onLoginClick} />;
   }
 
-  // 當編輯對象改變時，填充表單
   useEffect(() => {
     if (editingPerson) {
       setEditFormData({
@@ -68,16 +63,12 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     setSuggestionMessage(''); 
   }, [editingPerson]);
   
-  // 搜尋邏輯
   const filteredData = useMemo(() => {
     const dataToSort = [...refugeeData];
-
     if (!searchTerm.trim()) {
       return dataToSort.sort((a, b) => (b.sequenceNumber || 0) - (a.sequenceNumber || 0));
     }
-
     const lowercasedSearchTerm = searchTerm.toLowerCase();
-
     return dataToSort.filter(person => {
       const searchableFields = [
         person.name,
@@ -94,11 +85,9 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }).sort((a, b) => (b.sequenceNumber || 0) - (a.sequenceNumber || 0));
   }, [refugeeData, searchTerm]);
 
-  // 分頁邏輯
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // 刪除相關函式
   const handleDeleteClick = (id: string) => setDeleteConfirmId(id);
   const handleConfirmDelete = async () => {
     if (deleteConfirmId !== null) {
@@ -107,7 +96,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }
   };
   
-  // 匯出 Excel
   const handleExportToExcel = () => {
     const dataToExport = filteredData.map((person) => ({
       '編號': person.sequenceNumber || '無',
@@ -136,7 +124,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     XLSX.writeFile(workbook, `皈依弟子名冊_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  // 查看詳細資料
   const handleViewPerson = (person: Refugee) => {
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50';
@@ -148,7 +135,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     modal.querySelector('button')?.addEventListener('click', closeModal);
   };
 
-  // 編輯相關函式
   const handleOpenEditModal = (person: Refugee) => {
     setEditingPerson(person);
     setIsEditModalOpen(true);
@@ -162,21 +148,17 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPerson || !editFormData) return;
-
     if (!editFormData.name || !editFormData.gender || !editFormData.refugeDate || !editFormData.refugePlace) {
       alert(translations.fillAllRequired);
       return;
     }
-
     const dataToUpdate: Partial<Refugee> = {};
     for (const key in editFormData) {
         const field = key as keyof typeof editFormData;
         const value = editFormData[field];
-        // 將空字串轉換為 null 以便清空 Firestore 欄位，但保留值為 0 的情況
         // @ts-ignore
         dataToUpdate[field] = value === '' ? null : value;
     }
-
     await updateRefugee(editingPerson.id, dataToUpdate);
     setSuccessMessage(translations.updateSuccess);
     setTimeout(() => {
@@ -186,7 +168,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }, 1500);
   };
   
-  // 法名建議
   const handleSuggestDharmaName = () => {
     if (!refugeeData) {
       setSuggestionMessage("資料尚未載入，無法建議法名。");
@@ -194,9 +175,8 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }
     const usedPhoneticNames = new Set(refugeeData.map(p => p.dharmaNamePhonetic).filter(Boolean));
     const availableNames = dharmaNameList.filter(entry => !usedPhoneticNames.has(entry.phonetic));
-    
     if (availableNames.length > 0) {
-      const suggestedEntry = availableNames[0]; // 總是建議第一個可用的
+      const suggestedEntry = availableNames[0];
       setEditFormData(prev => ({...prev, dharmaName: suggestedEntry.name, dharmaNamePhonetic: suggestedEntry.phonetic, dharmaNameMeaning: suggestedEntry.meaning}));
       setSuggestionMessage('');
     } else {
@@ -204,7 +184,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     }
   };
 
-  // 寄送郵件相關函式
   const handleOpenSendModal = (person: Refugee) => {
     if (!person.email) {
       alert(translations.noEmailToSend || '此用戶沒有登記電子郵件，無法寄送。');
@@ -326,12 +305,15 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
         </div>
       )}
 
+      {/* ***** 這裡是最關鍵的修正 ***** */}
       {deleteConfirmId !== null && (
         <Modal isOpen={true} onClose={() => setDeleteConfirmId(null)} title={translations.confirmDeleteTitle || '確認刪除'}>
-          <p className="text-gray-600 mb-6">{translations.confirmDeleteMessage || '確定要刪除這筆資料嗎？此操作無法復原。'}</p>
-          <div className="flex gap-3">
-            <Button onClick={handleConfirmDelete} variant="danger" className="flex-1">{translations.confirmDeleteButton || '確認刪除'}</Button>
-            <Button onClick={() => setDeleteConfirmId(null)} variant="secondary" className="flex-1">{translations.cancel || '取消'}</Button>
+          <div>
+            <p className="text-gray-600 mb-6">{translations.confirmDeleteMessage || '確定要刪除這筆資料嗎？此操作無法復原。'}</p>
+            <div className="flex gap-3">
+              <Button onClick={handleConfirmDelete} variant="danger" className="flex-1">{translations.confirmDeleteButton || '確認刪除'}</Button>
+              <Button onClick={() => setDeleteConfirmId(null)} variant="secondary" className="flex-1">{translations.cancel || '取消'}</Button>
+            </div>
           </div>
         </Modal>
       )}
