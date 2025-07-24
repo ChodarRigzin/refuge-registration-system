@@ -22,8 +22,6 @@ exports.registerUser = functions.https.onCall(async (data, context) => {
       displayName: fullName,
     });
     
-    // 這裡的集合名稱 "users" 與前端的 "refugees" 不一致，
-    // 這是一個潛在問題，但暫時不影響新功能的實作。
     await db.collection("users").doc(userRecord.uid).set({
       fullName: fullName,
       email: email,
@@ -31,87 +29,71 @@ exports.registerUser = functions.https.onCall(async (data, context) => {
       registrationDate: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    console.log(`Successfully created new user: ${userRecord.uid}`);
+    functions.logger.log(`Successfully created new user: ${userRecord.uid}`);
     return {
       status: "success",
       message: "User registered successfully!",
       uid: userRecord.uid,
     };
   } catch (error) {
-    console.error("Error creating new user:", error);
+    functions.logger.error("Error creating new user:", error);
     throw new functions.https.HttpsError(
         "internal",
         "Failed to register user.",
-        error.message,
+        error,
     );
   }
 });
-
 
 // ======================================================================
 // 函式二：設定管理員權限 (您原本的程式碼，維持不變)
 // ======================================================================
 exports.setAdminRole = functions.https.onCall(async (data, context) => {
-  // 權限檢查：確保呼叫者是管理員
   if (context.auth.token.admin !== true) {
      return { error: "權限不足：只有管理員才能設定其他管理員。" };
   }
   
   const email = data.email;
-
   try {
     const user = await admin.auth().getUserByEmail(email);
     await admin.auth().setCustomUserClaims(user.uid, { admin: true });
-    
     return { message: `成功！ ${email} 現在是管理員了。` };
   } catch (error) {
-    console.error("設定管理員時發生錯誤:", error);
+    functions.logger.error("設定管理員時發生錯誤:", error);
     throw new functions.https.HttpsError(
       "internal",
       "Failed to set admin role.",
-      error.message,
+      error,
     );
   }
 });
 
-
 // ======================================================================
-// 函式三：為新的皈依登記資料產生唯一的序列號 (新增加的函式)
+// 函式三：為新的皈依登記資料產生永久編號 (新增加的函式)
 // ======================================================================
-exports.generateSequenceNumber = functions.firestore
+exports.onRefugeeCreate = functions.firestore
   .document("refugees/{refugeeId}")
-  .onCreate(async (snapshot, context) => {
-    // 1. 取得計數器文件的引用
-    const counterRef = db.collection("metadata").doc("refugeeCounter");
+  .onCreate(async (snap, context) => {
+    // 1. 找到 metadata 文件，它用來記錄目前的最高編號
+    const metadataRef = db.collection("metadata").doc("refugees");
 
-    try {
-      // 2. 使用 Transaction (事務) 來安全地讀取和更新計數器
-      const newSequenceNumber = await db.runTransaction(async (transaction) => {
-        const counterDoc = await transaction.get(counterRef);
+    // 2. 使用事務來安全地讀取和更新編號
+    return db.runTransaction(async (transaction) => {
+      const metadataDoc = await transaction.get(metadataRef);
 
-        let newNumber;
-        if (!counterDoc.exists) {
-          newNumber = 1;
-        } else {
-          const currentNumber = counterDoc.data().currentNumber || 0;
-          newNumber = currentNumber + 1;
-        }
-        transaction.update(counterRef, { currentNumber: newNumber });
-        return newNumber;
-      });
+      // 3. 獲取當前編號，如果 metadata 不存在，就從 0 開始
+      const currentSequence = metadataDoc.data()?.currentSequence || 0;
+      const newSequence = currentSequence + 1;
 
-      // 3. 將獲得的唯一編號更新到新建立的資料上
-      const newRefugeeRef = snapshot.ref;
-      await newRefugeeRef.update({ sequenceNumber: newSequenceNumber });
-      
-      console.log(
-        `Successfully assigned sequence number ${newSequenceNumber} to refugee ${context.params.refugeeId}`
-      );
-      
-    } catch (error) {
-      console.error(
-        `Failed to generate sequence number for refugee ${context.params.refugeeId}`,
-        error
-      );
-    }
+      // 4. 更新 metadata 文件中的最高編號
+      // 使用 merge: true 確保不會覆蓋 metadata 文件中的其他可能欄位
+      transaction.set(metadataRef, { currentSequence: newSequence }, { merge: true });
+
+      // 5. 將這個新的、永久的編號寫回到剛剛被建立的那筆 refugee 資料中
+      functions.logger.log(`Assigning sequence number ${newSequence} to refugee ${snap.id}`);
+      return transaction.update(snap.ref, { sequenceNumber: newSequence });
+    }).catch(err => {
+        functions.logger.error(`Transaction failed for refugee ${snap.id}`, err);
+        return null; // 確保函式有返回值
+    });
   });
