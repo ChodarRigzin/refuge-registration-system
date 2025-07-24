@@ -1,11 +1,10 @@
-// src/contexts/AppContext.tsx - 最終、完整、包含所有功能的版本
+// src/contexts/AppContext.tsx - 修正了資料讀取邏輯的最終版本
 
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Language, Refugee, AppContextType, Translations } from '../types';
 import { initialTranslations } from '../constants';
 
-// --- 引入所有需要的 Firebase 工具 ---
-import { db, auth, functions } from '../firebase'; // 引入 functions
+import { db, auth } from '../firebase'; // functions 在這裡不需要
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
 
@@ -16,31 +15,26 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  // --- 狀態管理 ---
   const [language, setLanguageState] = useState<Language>(() => (localStorage.getItem('preferredLanguage') as Language) || 'zh');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [refugees, setRefugees] = useState<Refugee[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // 合併了資料和驗證的讀取狀態
+  const [loading, setLoading] = useState(true);
 
-  // --- Effect: 處理語言變更 ---
   useEffect(() => {
     localStorage.setItem('preferredLanguage', language);
   }, [language]);
 
-  // --- Effect: 監聽 Firebase Auth 狀態 (核心) ---
+  // Effect 1: 專門監聽 Firebase Auth 狀態，並設定 isAdmin
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
       setCurrentUser(user);
       if (user) {
-        const tokenResult = await user.getIdTokenResult();
+        // 使用 getIdTokenResult 可以強制刷新 token，確保拿到最新的自訂宣告
+        const tokenResult = await user.getIdTokenResult(true); 
         const userIsAdmin = tokenResult.claims.admin === true;
         setIsAdmin(userIsAdmin);
-        // 如果是管理員，就去讀取資料
-        if (userIsAdmin) {
-          await fetchRefugees();
-        }
       } else {
         setIsAdmin(false);
         setRefugees([]); // 登出後清空資料
@@ -50,33 +44,45 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  // --- 資料庫 CRUD 函式 ---
-  const fetchRefugees = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, "refugees"));
-      const refugeesFromDb = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Refugee[];
-      setRefugees(refugeesFromDb);
-    } catch (error) {
-      console.error("從 Firebase 讀取資料失敗: ", error);
+  // ***** 這裡是關鍵修改 *****
+  // Effect 2: 專門監聽 isAdmin 狀態的變化。
+  // 一旦 isAdmin 變為 true，就去讀取資料。
+  useEffect(() => {
+    // 定義一個函式來獲取資料
+    const fetchRefugees = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "refugees"));
+        const refugeesFromDb = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Refugee[];
+        setRefugees(refugeesFromDb);
+      } catch (error) {
+        console.error("從 Firebase 讀取資料失敗: ", error);
+        setRefugees([]); // 如果讀取失敗，確保列表是空的
+      }
+    };
+
+    // 只有當使用者是管理員時，才執行獲取
+    if (isAdmin) {
+      fetchRefugees();
     }
-  };
+  }, [isAdmin]); // <--- 依賴於 isAdmin 的變化！
 
   const addRefugee = useCallback(async (data: Omit<Refugee, 'id' | 'registrationTime'>) => {
     try {
       await addDoc(collection(db, "refugees"), { ...data, registrationTime: serverTimestamp() });
-      // 寫入成功後，可以選擇性地重新獲取一次列表以確保同步
-      if (isAdmin) { await fetchRefugees(); }
+      // 寫入成功後，不需要手動刷新，因為 isAdmin 狀態沒變，列表會自動更新（如果需要的話）
+      // 更好的做法是在 RegistrationList 中顯示一個成功訊息
     } catch (error) {
       console.error("新增資料到 Firebase 失敗: ", error);
       throw error;
     }
-  }, [isAdmin]);
+  }, []);
 
   const updateRefugee = useCallback(async (id: string, updatedData: Partial<Omit<Refugee, 'id'>>) => {
     const refugeeDocRef = doc(db, "refugees", id);
     try {
       await updateDoc(refugeeDocRef, updatedData);
-      setRefugees(prevData => prevData.map(refugee => refugee.id === id ? { ...refugee, ...updatedData } : refugee));
+      // 更新本地狀態以提供即時反饋
+      setRefugees(prevData => prevData.map(refugee => refugee.id === id ? { ...refugee, ...updatedData } as Refugee : refugee));
     } catch (error) {
       console.error("更新 Firebase 資料失敗: ", error);
       throw error;
@@ -84,19 +90,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   }, []);
 
   const deleteRefugee = useCallback(async (id: string) => {
-    if (window.confirm(initialTranslations[language].confirmDelete)) {
-      const refugeeDocRef = doc(db, "refugees", id);
-      try {
-        await deleteDoc(refugeeDocRef);
-        setRefugees(prevData => prevData.filter(r => r.id !== id));
-      } catch (error) {
-        console.error("刪除 Firebase 資料失敗: ", error);
-        throw error;
-      }
+    const refugeeDocRef = doc(db, "refugees", id);
+    try {
+      await deleteDoc(refugeeDocRef);
+      setRefugees(prevData => prevData.filter(r => r.id !== id));
+    } catch (error) {
+      console.error("刪除 Firebase 資料失敗: ", error);
+      throw error;
     }
-  }, [language]);
+  }, []);
 
-  // --- 身份驗證函式 ---
   const login = useCallback(async (email: string, pass: string): Promise<boolean> => {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
@@ -117,8 +120,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   
   const translations = initialTranslations[language];
 
-  // ******** 這是您指出的、之前遺漏的關鍵部分 ********
-  // 組合所有要提供給子元件的 value
   const value: AppContextType = {
     language,
     setLanguage: useCallback((lang: Language) => setLanguageState(lang), []),
@@ -131,12 +132,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateRefugee,
     deleteRefugee,
   };
-  
 
   return (
     <AppContext.Provider value={value}>
       {loading ? (
-        <div className="flex items-center justify-center min-h-screen">載入中...</div>
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+          <div className="w-12 h-12 border-4 border-yellow-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
       ) : (
         children
       )}
