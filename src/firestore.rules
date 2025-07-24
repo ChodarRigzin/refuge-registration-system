@@ -10,24 +10,22 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // --- “registrations” 集合的規則 (儲存報名資料) ---
-    match /registrations/{registrationId} {
+    // 規則應用於 "refugees" 集合
+    match /refugees/{refugeeId} {
       
-      // 建立(Create): 任何人都可以提交報名表 (公開功能)
+      // 任何人都可以建立 (寫入) 報名資料
       allow create: if true;
 
-      // 讀取(Read), 更新(Update), 刪除(Delete): 只有管理員可以操作
+      // 只有管理員可以讀取、更新、刪除
       allow read, update, delete: if isAdmin();
     }
 
-    // --- “users” 集合的規則 (儲存角色權限) ---
+    // 規則應用於 "users" 集合
     match /users/{userId} {
-    
-      // 讀取(Read): 登入者只能讀取自己的使用者資料
+      // 登入者只能讀取自己的使用者資料
       allow read: if request.auth != null && request.auth.uid == userId;
-
-      // 寫入(Write): 禁止任何人從前端 App 寫入，以防使用者把自己變成管理員
-      // 管理員必須由您從 Firebase 後台手動設定
+      
+      // 禁止任何人從前端 App 寫入
       allow write: if false;
     }
   }

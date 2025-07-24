@@ -766,14 +766,14 @@ function generateCertificateHTML(personData: any): string {
       <p>*馬來西亞蓮花勝王禪修苑</p> 
       <p>地址：No. 1, Jalan Jaya Putra 5/68, 81100 Johor Bahru, Malaysia </p>   
       <p>電話(Tel.)：+60 12 790 3522</p> 
-      <p>*法國 Choktsang Lungtok</p>   
-      <p>地址：4 rue de l'Artois 92160 Antony </p> 
       <p>電話(Tel.)：+33 1 75 32 37 96</p> 
       <p>*美國蓮花佛學會(西雅圖)｜Padma Raja Society</p> 
       <p>地址：1843 NW Lutes Rd.,  Poulsbo WA 98370 USA  </p> 
       <p>電話 (Tel.)： 360-930-0709/5128391525
       <p>*貝瑪阿諦佛學院｜PadmaAti Buddhism Institute</p> 
       <p>122 Wheturangi Rd., GreenlandAuckland 1051, New Zealand</p> 
+      <p>*法國 Choktsang Lungtok</p>   
+      <p>地址：4 rue de l'Artois 92160 Antony </p> 
      </div>
     <div class="page teachings-page">
        <h3>網站資訊</h3>
@@ -781,13 +781,13 @@ function generateCertificateHTML(personData: any): string {
        <p>http://www.rigzin-chenpo.org/</p> 
        <p>噶陀仁珍千寶佛學會臉書</p>
        <p>https://www.facebook.com/rigzinchenpoassociation/?locale=zh_TW</p> 
-       <p>妙乘法苑臉書</p>
-       <p>https://www.facebook.com/groups/586354635295716/?locale=zh_TW</p> 
        <p>勝覺網</p> 
        <p>https://victoriousbodhi.com/</p> 
        <p>https://victorious-bodhi.org/</p> 
        <p>貝瑪阿諦佛學院</p> 
        <p>https://www.atiorg.com/zh-Hant</p> 
+       <p>妙乘法苑臉書</p>
+       <p>https://www.facebook.com/groups/586354635295716/?locale=zh_TW</p> 
     </div>
   </div>
 
