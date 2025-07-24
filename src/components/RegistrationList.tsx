@@ -145,27 +145,45 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
     setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
   };
   
+  // ***** 這裡是關鍵修正 *****
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPerson || !editFormData) return;
+
+    // 必填欄位檢查
     if (!editFormData.name || !editFormData.gender || !editFormData.refugeDate || !editFormData.refugePlace) {
       alert(translations.fillAllRequired);
       return;
     }
-    const dataToUpdate: Partial<Refugee> = {};
+
+    // 建立一個乾淨的物件，準備用來更新
+    const dataToUpdate: { [key: string]: any } = {};
+
+    // 智慧地過濾和轉換資料
     for (const key in editFormData) {
         const field = key as keyof typeof editFormData;
         const value = editFormData[field];
-        // @ts-ignore
-        dataToUpdate[field] = value === '' ? null : value;
+
+        // 只有當 value 不是 undefined 時，我們才處理它
+        if (value !== undefined) {
+            // 如果 value 是空字串，我們將其轉換為 null，以便能清空 Firestore 欄位
+            dataToUpdate[field] = value === '' ? null : value;
+        }
     }
-    await updateRefugee(editingPerson.id, dataToUpdate);
-    setSuccessMessage(translations.updateSuccess);
-    setTimeout(() => {
-      setIsEditModalOpen(false);
-      setEditingPerson(null);
-      setSuccessMessage('');
-    }, 1500);
+
+    // 呼叫更新函式
+    try {
+        await updateRefugee(editingPerson.id, dataToUpdate);
+        setSuccessMessage(translations.updateSuccess);
+        setTimeout(() => {
+          setIsEditModalOpen(false);
+          setEditingPerson(null);
+          setSuccessMessage('');
+        }, 1500);
+    } catch (error) {
+        console.error("更新 Firebase 資料失敗:", error);
+        alert('更新失敗，請檢查控制台中的錯誤訊息。');
+    }
   };
   
   const handleSuggestDharmaName = () => {
@@ -305,7 +323,6 @@ export const RegistrationList: React.FC<RegistrationListProps> = ({ onLoginClick
         </div>
       )}
 
-      {/* ***** 這裡是最關鍵的修正 ***** */}
       {deleteConfirmId !== null && (
         <Modal isOpen={true} onClose={() => setDeleteConfirmId(null)} title={translations.confirmDeleteTitle || '確認刪除'}>
           <div>
